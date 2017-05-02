@@ -20,7 +20,7 @@ function selectRow(list,i) {
 }
 function updateRiders() {
   var a = []
-  a.push('<div class="list">List of riders:<table>')
+  a.push('<div class="list"><span class="EN">List of riders</span><span class="NL">Lijst met rijders</span>:<table>')
   for (var i=0; i<RIDERS.length; i++) {
     var r = RIDERS[i]
     a.push('<tr onclick="selectRow(\'rider\','+i+')"><td>'+i+'</td><td>'+r.firstName+'</td><td>'+r.lastName+'</td><td>'+r.gender+'</td></tr></tr>')
@@ -71,29 +71,38 @@ function deleteRider() {
   RIDERS[number] = EMPTY_RIDER
   updateRiders()
 }
+function selectLanguage(on,off) {
+  var elems = document.getElementsByClassName(off)
+  for (var i=0; i<elems.length; i++) elems[i].style.display='none'
+  var elems = document.getElementsByClassName(on)
+  for (var i=0; i<elems.length; i++) elems[i].style.display='inline'
+}
 </script>
 <style type="text/css">
 td { border: 2px solid #eee }
 div.list { border: 2px solid blue; margin: 1ex 0ex; padding: 1ex; border-radius: 1ex }
 table.add { border: 1px solid blue; background: #eee; margin: 1ex; padding: 1ex; border-radius: 1ex }
 div.error { background: #FFF; color: #800; font-weight: bold; display: block }
+span.NL { display: none }
+span.EN { display: inline }
 </style>
 </head>
 <body onload="updateRiders()">
-Welcome to the <b>CycleVision registration helper</b>. It allows you to
-register multiple riders with multiple bikes. Fill out the forms below, 
+<input type="button" value="ENGLISH" onclick="selectLanguage('EN','NL')">&nbsp;<input type="button" value="NEDERLANDS" onclick="selectLanguage('NL','EN')">
+<p><span class="EN">Welcome to the <b>CycleVision registration module</b>. It allows you to
+register multiple riders with multiple bikes.<br/>Fill out the forms below, 
 click [Done] at the bottom, and you will be taken back to the Ligfiets.net
-registration page where you can confirm and pay.
-
+registration page where you can confirm and pay.</span><span class="NL">Welkom bij de <b>CycleVision registratie module</b>. Hiermee kun je meerder rijders met verschillende fietsen inschrijven voor de races.<br/>Vul de formulieren hieronder in, druk daarna helemaal onderaan op [Gereed], en je wordt teruggeleid naar de Ligfiets.net inschrijfpagina waar je kunt bevestigen en betalen.</span>
+</p>
 <h3>Team</h3>
-Enter the details for all riders that you are registering, including
-yourself.
+<span class="EN">Enter the details for all riders that you are registering, including
+yourself.</span><span class="NL">Vul voor iedere racer die je aanmeldt de gegevens in, ook voor jezelf.</span>
 <div id="rider-list">
 </div>
 <table class="add"><tr>
   <td colspan="3"><div id="rider-form-error" class="error"/></td>
 </tr><tr>
-  <td class="key">Number</td><td class="colon">:</td><td class="value"><select id="rider-number" onchange="selectRider(this.selectedIndex)"><option selected value="0">0</option></select></td>
+  <td class="key">Index</td><td class="colon">:</td><td class="value"><select id="rider-number" onchange="selectRider(this.selectedIndex)"><option selected value="0">0</option></select></td>
 </tr><tr>
   <td colspan="3"><div id="rider-first-name-error" class="error"/></td>
 </tr><tr>
