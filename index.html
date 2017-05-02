@@ -1,6 +1,110 @@
+<!DOCTYPE html>
 <html>
+<head><meta charset="utf-8"/>
+<script type="text/javascript">
+var RIDERS = []
+var EMPTY_RIDER = {firstName:'',lastName:'',gender:''}
+var BIKES = []
+var FORM_ERROR = false
+function getElem(id) { return document.getElementById(id) }
+function fieldCheck(id,msg) {
+  if (msg) {
+    FORM_ERROR = true
+    var e = getElem(''+id+'-error'); e.innerHTML = msg; e.style.display = 'block'
+  } else {
+    var e = getElem(''+id+'-error'); e.innerHTML = msg; e.style.display = 'none'
+  }
+}
+function selectRow(list,i) {
+  if (list == 'rider') selectRider(i)
+}
+function updateRiders() {
+  var a = []
+  a.push('<div class="list">List of riders:<table>')
+  for (var i=0; i<RIDERS.length; i++) {
+    var r = RIDERS[i]
+    a.push('<tr onclick="selectRow(\'rider\','+i+')"><td>'+i+'</td><td>'+r.firstName+'</td><td>'+r.lastName+'</td><td>'+r.gender+'</td></tr></tr>')
+  }
+//  a.push('<tr onclick="selectRow(\'rider\','+RIDERS.length+')"><td colspan="3"><input type="button" value="New"></td></tr></tr>')
+  a.push('<tr onclick="selectRow(\'rider\','+RIDERS.length+')"><td>...</td></tr></tr>')
+  a.push('</table></div>')
+  getElem('rider-list').innerHTML = a.join('')
+  a = []
+  a.push('<select>')
+  for (var i=0; i<RIDERS.length; i++) {
+    a.push('<option value="'+i+'">'+i+'</option>')
+  }
+  a.push('<option selected value="'+RIDERS.length+'">'+i+'</option>')
+  a.push('</select>')
+  getElem('rider-number').innerHTML = a.join('')
+  selectRider(RIDERS.length)
+}
+function addRider() {
+  FORM_ERROR = false;
+  FORM_IDS = [];
+  var firstName = getElem('rider-first-name').value.trim()
+  fieldCheck('rider-first-name',firstName && firstName.length>=2 ? '' : 'Error: enter a valid first name.')
+  var lastName = getElem('rider-last-name').value.trim()
+  fieldCheck('rider-last-name',lastName && lastName.length>=2 ? '' : 'Error: enter a valid last name.')
+  var gender = getElem('rider-gender').options[getElem('rider-gender').selectedIndex].value
+  if (!FORM_ERROR) {
+    RIDERS.push({
+      firstName: firstName,
+      lastName: lastName,
+      gender: gender
+    })
+    updateRiders()
+  }
+}
+function selectRider(i) {
+  var r = RIDERS[i]
+  if (i>=RIDERS.length) r = EMPTY_RIDER
+  getElem('rider-number').selectedIndex = i
+  getElem('rider-first-name').value = r.firstName
+  getElem('rider-last-name').value = r.lastName
+  var options = getElem('rider-gender').options
+  getElem('rider-gender').selectedIndex = 0
+  for (var i=0; i<options; i++) if (options[i].value == r.gender) getElem('rider-gender').selectedIndex = i
+}
+function deleteRider() {
+  var number = getElem('rider-number').value.trim()
+  RIDERS[number] = EMPTY_RIDER
+  updateRiders()
+}
+</script>
+<style type="text/css">
+td { border: 2px solid #eee }
+div.list { border: 2px solid blue; margin: 1ex 0ex; padding: 1ex; border-radius: 1ex }
+table.add { border: 1px solid blue; background: #eee; margin: 1ex; padding: 1ex; border-radius: 1ex }
+div.error { background: #FFF; color: #800; font-weight: bold; display: block }
+</style>
+</head>
+<body onload="updateRiders()">
 Welcome to the <b>CycleVision registration helper</b>. It allows you to
 register multiple riders with multiple bikes. Fill out the forms below, 
 click [Done] at the bottom, and you will be taken back to the Ligfiets.net
 registration page where you can confirm and pay.
-</html>
+
+<h3>Team</h3>
+Enter the details for all riders that you are registering, including
+yourself.
+<div id="rider-list">
+</div>
+<table class="add"><tr>
+  <td colspan="3"><div id="rider-form-error" class="error"/></td>
+</tr><tr>
+  <td class="key">Number</td><td class="colon">:</td><td class="value"><select id="rider-number" onchange="selectRider(this.selectedIndex)"><option selected value="0">0</option></select></td>
+</tr><tr>
+  <td colspan="3"><div id="rider-first-name-error" class="error"/></td>
+</tr><tr>
+  <td class="key">First name</td><td class="colon">:</td><td class="value"><input id="rider-first-name" type="text" value=""/></td>
+</tr><tr>
+  <td colspan="3"><div id="rider-last-name-error" class="error"/></td>
+</tr><tr>
+  <td class="key">Last name</td><td class="colon">:</td><td class="value"><input id="rider-last-name" type="text" value=""/></td>
+</tr><tr>
+  <td class="key">Gender</td><td class="colon">:</td><td class="value"><select id="rider-gender"><option value="female">female</option><option value="male">male</option></select></td>
+</tr><tr>
+  <td colspan="3"><input type="button" value="Add/edit this rider" onclick="addRider()"/>&nbsp;<input type="button" value="Delete this rider" onclick="deleteRider()"/></td>
+</tr></table>
+</body></html>
