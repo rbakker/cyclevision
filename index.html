@@ -1,12 +1,103 @@
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"/>
+<style type="text/css">
+td { border-left: 2px solid #eee }
+div.list { border: 2px solid blue; margin: 1ex 0ex; padding: 1ex; margin-bottom: 0px; border-radius: 1ex }
+table.add { border: 1px solid blue; background: #eee; margin: 1ex; padding: 1ex; margin-top: 0ex }
+div.error { background: #FFF; color: #800; font-weight: bold; display: block }
+span.NL { display: none }
+span.EN { display: inline }
+</style>
 <script type="text/javascript">
-var RIDERS = []
-var EMPTY_RIDER = {firstName:'',lastName:'',gender:''}
-var BIKES = []
+"use strict"
+
+function checkName() {}
+
+var FORMS = {
+  rider: {
+    firstName: { name: { NL: "voornaam", EN: "first name" }, type: "text", check: checkName },
+    lastName: { name: { NL: "achternaam", EN: "last name" }, type: "text", check: checkName },
+    gender: { name: { NL: "geslacht", EN: "gender" }, type: "select", check: null }
+  },
+  bike: {
+    name: { name: { NL: "koosnaam", EN: "given name" }, type: "text", check: checkName, preset: '' },
+    make: { name: { NL: "merk en type", EN: "make and type" }, type: "select", check: null },
+    custom: { name: { NL: "aangepast merk en type", EN: "custom make and type" }, type: "text", check: checkName, preset: '' },
+    category: { name: { NL: "categorie", EN: "category" }, type: "select", check: null }
+  }
+}
+
+var LANG = {
+  rider: {
+    NL: ['rijder','rijders'],
+    EN: ['rider','riders']
+  },
+  bike: {
+    NL: ['fiets','fietsen'],
+    EN: ['bike','bikes']
+  }
+}
+
+var DATA = {
+  rider: {},
+  bike: {}
+}
+
 var FORM_ERROR = false
+
 function getElem(id) { return document.getElementById(id) }
+function next(h) { var n=0; for (var k in h) if (Number(k)>=n) n = Number(k)+1; return n }
+function count(h) { var n=0; for (var k in h) if (h.hasOwnProperty(k)) n++; return n }
+
+function getValue(field,type) {
+  if (type == 'text') return field.value
+  if (type == 'select') return field.options[field.selectedIndex].value
+}
+
+function setValue(field,type,value) {
+  if (type == 'text') field.value = value
+  if (type == 'select') {
+    var options = field.options
+    for (var i=0; i<options; i++) if (options[i].value == value) field.selectedIndex = i
+  }
+}
+
+function selectItem(i,itemKey) {
+  var items = DATA[itemKey]
+  var r = DATA[itemKey][i]
+  var fields = FORMS[itemKey]
+  if (!r) { r = {}; for (var k in fields) { r[k] = fields[k].preset || '' } }
+  var si=0
+  for (var k in items) { if (i == k) getElem(''+itemKey+'-number').selectedIndex = k }
+  for (var k in fields) {
+    setValue(getElem(itemKey+'-'+k),fields[k].type,r[k])
+  }
+}
+
+function updateItems(itemKey) {
+  var items = DATA[itemKey]
+  var a = []
+  a.push('<div class="list"><span class="EN">List of '+LANG[itemKey].EN[1]+'</span><span class="NL">Lijst met '+LANG[itemKey].NL[1]+'</span>:<table>')
+  for (var i in items) {
+    var r = items[i]
+    a.push('<tr onclick="selectItem('+i+',\''+itemKey+'\')"><td>'+i+'</td>')
+    for (var k in r) a.push('<td>'+r[k]+'</td>')
+    a.push('</tr>')
+  }
+  a.push('<tr onclick="selectItem('+next(items)+',\''+itemKey+'\')"><td>...</td></tr></tr>')
+  a.push('</table></div>')
+  getElem(''+itemKey+'-list').innerHTML = a.join('')
+  a = []
+  for (var i in items) {
+    a.push('<option value="'+i+'">'+i+'</option>')
+  }
+  i = next(items)
+  a.push('<option selected value="'+i+'">'+i+'</option>')
+  getElem(''+itemKey+'-number').innerHTML = a.join('')
+  selectItem(i,itemKey)
+}
+
 function fieldCheck(id,msg) {
   if (msg) {
     FORM_ERROR = true
@@ -15,62 +106,35 @@ function fieldCheck(id,msg) {
     var e = getElem(''+id+'-error'); e.innerHTML = msg; e.style.display = 'none'
   }
 }
-function selectRow(list,i) {
-  if (list == 'rider') selectRider(i)
+
+function checkName(val,itemKey,k) {
+  var name = FORMS[itemKey][k].name.EN
+  fieldCheck(itemKey+'-'+k,val && val.length>=2 ? '' : 'Error: enter a valid '+name+'.')
 }
-function updateRiders() {
-  var a = []
-  a.push('<div class="list"><span class="EN">List of riders</span><span class="NL">Lijst met rijders</span>:<table>')
-  for (var i=0; i<RIDERS.length; i++) {
-    var r = RIDERS[i]
-    a.push('<tr onclick="selectRow(\'rider\','+i+')"><td>'+i+'</td><td>'+r.firstName+'</td><td>'+r.lastName+'</td><td>'+r.gender+'</td></tr></tr>')
-  }
-//  a.push('<tr onclick="selectRow(\'rider\','+RIDERS.length+')"><td colspan="3"><input type="button" value="New"></td></tr></tr>')
-  a.push('<tr onclick="selectRow(\'rider\','+RIDERS.length+')"><td>...</td></tr></tr>')
-  a.push('</table></div>')
-  getElem('rider-list').innerHTML = a.join('')
-  a = []
-  a.push('<select>')
-  for (var i=0; i<RIDERS.length; i++) {
-    a.push('<option value="'+i+'">'+i+'</option>')
-  }
-  a.push('<option selected value="'+RIDERS.length+'">'+i+'</option>')
-  a.push('</select>')
-  getElem('rider-number').innerHTML = a.join('')
-  selectRider(RIDERS.length)
-}
-function addRider() {
+
+function addItem(itemKey) {
   FORM_ERROR = false;
-  FORM_IDS = [];
-  var firstName = getElem('rider-first-name').value.trim()
-  fieldCheck('rider-first-name',firstName && firstName.length>=2 ? '' : 'Error: enter a valid first name.')
-  var lastName = getElem('rider-last-name').value.trim()
-  fieldCheck('rider-last-name',lastName && lastName.length>=2 ? '' : 'Error: enter a valid last name.')
-  var gender = getElem('rider-gender').options[getElem('rider-gender').selectedIndex].value
+  var id = getElem(''+itemKey+'-number').value.trim()
+  var fields = FORMS[itemKey]
+  var values = {}
+  for (var k in fields) {
+    var f = fields[k]
+    var val = getValue(getElem(''+itemKey+'-'+k),f.type).trim()
+    if (f.check) f.check(val,itemKey,k)
+    values[k] = val
+  }
   if (!FORM_ERROR) {
-    RIDERS.push({
-      firstName: firstName,
-      lastName: lastName,
-      gender: gender
-    })
-    updateRiders()
+    DATA[itemKey][id] = values
+    updateItems(itemKey)
   }
 }
-function selectRider(i) {
-  var r = RIDERS[i]
-  if (i>=RIDERS.length) r = EMPTY_RIDER
-  getElem('rider-number').selectedIndex = i
-  getElem('rider-first-name').value = r.firstName
-  getElem('rider-last-name').value = r.lastName
-  var options = getElem('rider-gender').options
-  getElem('rider-gender').selectedIndex = 0
-  for (var i=0; i<options; i++) if (options[i].value == r.gender) getElem('rider-gender').selectedIndex = i
+
+function deleteItem(itemKey) {
+  var number = getElem(''+itemKey+'-number').value.trim()
+  delete DATA[itemKey][number]
+  updateItems(itemKey)
 }
-function deleteRider() {
-  var number = getElem('rider-number').value.trim()
-  RIDERS[number] = EMPTY_RIDER
-  updateRiders()
-}
+
 function selectLanguage(on,off) {
   var elems = document.getElementsByClassName(off)
   for (var i=0; i<elems.length; i++) elems[i].style.display='none'
@@ -78,16 +142,8 @@ function selectLanguage(on,off) {
   for (var i=0; i<elems.length; i++) elems[i].style.display='inline'
 }
 </script>
-<style type="text/css">
-td { border: 2px solid #eee }
-div.list { border: 2px solid blue; margin: 1ex 0ex; padding: 1ex; border-radius: 1ex }
-table.add { border: 1px solid blue; background: #eee; margin: 1ex; padding: 1ex; border-radius: 1ex }
-div.error { background: #FFF; color: #800; font-weight: bold; display: block }
-span.NL { display: none }
-span.EN { display: inline }
-</style>
 </head>
-<body onload="updateRiders()">
+<body onload="updateItems('rider'); updateItems('bike')">
 <input type="button" value="ENGLISH" onclick="selectLanguage('EN','NL')">&nbsp;<input type="button" value="NEDERLANDS" onclick="selectLanguage('NL','EN')">
 <p><span class="EN">Welcome to the <b>CycleVision registration module</b>. It allows you to
 register multiple riders with multiple bikes.<br/>Fill out the forms below, 
@@ -102,18 +158,44 @@ yourself.</span><span class="NL">Vul voor iedere racer die je aanmeldt de gegeve
 <table class="add"><tr>
   <td colspan="3"><div id="rider-form-error" class="error"/></td>
 </tr><tr>
-  <td class="key">Index</td><td class="colon">:</td><td class="value"><select id="rider-number" onchange="selectRider(this.selectedIndex)"><option selected value="0">0</option></select></td>
+  <td class="key">index</td><td class="colon">:</td><td class="value"><select id="rider-number" onchange="selectItem(this.selectedIndex,'rider')"><option selected value="0">0</option></select></td>
 </tr><tr>
-  <td colspan="3"><div id="rider-first-name-error" class="error"/></td>
+  <td colspan="3"><div id="rider-firstName-error" class="error"/></td>
 </tr><tr>
-  <td class="key">First name</td><td class="colon">:</td><td class="value"><input id="rider-first-name" type="text" value=""/></td>
+  <td class="key">first name</td><td class="colon">:</td><td class="value"><input id="rider-firstName" type="text" value=""/></td>
 </tr><tr>
-  <td colspan="3"><div id="rider-last-name-error" class="error"/></td>
+  <td colspan="3"><div id="rider-lastName-error" class="error"/></td>
 </tr><tr>
-  <td class="key">Last name</td><td class="colon">:</td><td class="value"><input id="rider-last-name" type="text" value=""/></td>
+  <td class="key">last name</td><td class="colon">:</td><td class="value"><input id="rider-lastName" type="text" value=""/></td>
 </tr><tr>
-  <td class="key">Gender</td><td class="colon">:</td><td class="value"><select id="rider-gender"><option value="female">female</option><option value="male">male</option></select></td>
+  <td class="key">gender</td><td class="colon">:</td><td class="value"><select id="rider-gender"><option value="female">female</option><option value="male">male</option></select></td>
 </tr><tr>
-  <td colspan="3"><input type="button" value="Add/edit this rider" onclick="addRider()"/>&nbsp;<input type="button" value="Delete this rider" onclick="deleteRider()"/></td>
+  <td colspan="3"><input type="button" value="Add/edit this rider" onclick="addItem('rider')"/>&nbsp;<input type="button" value="Delete this rider" onclick="deleteItem('rider')"/></td>
+</tr></table>
+
+<h3><span class="EN">Bikes</span><span class="NL">Fietsen</span></h3>
+<span class="EN">Enter the details for all bikes that you/your team will use.</span><span class="NL">Maak hier een lijst met alle fietsen die jij of je team gaat inzetten.</span>
+<div id="bike-list">
+</div>
+<table class="add"><tr>
+  <td colspan="3"><div id="bike-form-error" class="error"/></td>
+</tr><tr>
+  <td class="key">index</td><td class="colon">:</td><td class="value"><select id="bike-number" onchange="selectItem(this.selectedIndex,'bike')"><option selected value="0">0</option></select></td>
+</tr><tr>
+  <td colspan="3"><div id="bike-name-error" class="error"/></td>
+</tr><tr>
+  <td class="key">name</td><td class="colon">:</td><td class="value"><input id="bike-name" type="text" value=""/></td>
+</tr><tr>
+  <td colspan="3"><div id="bike-make-error" class="error"/></td>
+</tr><tr>
+  <td class="key">standard make/type</td><td class="colon">:</td><td class="value"><select id="bike-make"><option value="quest">Velomobiel.nl Quest</option></select></td>
+</tr><tr>
+  <td colspan="3"><div id="bike-custom-error" class="error"/></td>
+</tr><tr>
+  <td class="key">custom make/type</td><td class="colon">:</td><td class="value"><input id="bike-custom" type="text" value=""/></td>
+</tr><tr>
+  <td class="key">category</td><td class="colon">:</td><td class="value"><select id="bike-category"><option value="faired">faired</option><option value="unfaired">unfaired</option></select></td>
+</tr><tr>
+  <td colspan="3"><input type="button" value="Add/edit this bike" onclick="addItem('bike')"/>&nbsp;<input type="button" value="Delete this bike" onclick="deleteItem('bike')"/></td>
 </tr></table>
 </body></html>
