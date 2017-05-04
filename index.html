@@ -2,10 +2,13 @@
 <html>
 <head><meta charset="utf-8"/>
 <style type="text/css">
+body { float: left; position: relative; left: 50%; background: #fbfbff }
+div#page { width: 1146px; position: relative; float: left; left: -50%; background: #fff}
+div#forms { padding: 1% }
 td { border-left: 2px solid #eee }
 div.list { border: 2px solid blue; margin: 1ex 0ex; padding: 1ex; margin-bottom: 0px; border-radius: 1ex }
-table.add { border: 1px solid blue; background: #eef; margin: 1ex; padding: 1ex; margin-top: 0px; padding-top:0px}
-div.error { background: #FFF; color: #800; font-weight: bold; display: block }
+table.add { border: 1px solid blue; background: #f0faff; margin: 1ex; padding: 1ex; margin-top: 0px; padding-top:0px}
+div.error { background: #fff; color: #800; font-weight: bold; display: block }
 div.id { text-align: center; background: #eee; padding: 1ex; border-radius: 1ex; border: 1px solid black}
 span.NL { display: none }
 span.EN { display: inline }
@@ -20,7 +23,8 @@ var FORMS = {
     firstName: { name: { NL: "voornaam", EN: "first name" }, type: "text", check: checkName },
     lastName: { name: { NL: "achternaam", EN: "last name" }, type: "text", check: checkName },
     gender: { name: { NL: "geslacht", EN: "gender" }, type: "radio", check: checkRadio, options: genderOptions },
-    birthDate: { name: { NL: "geboortedatum", EN: "date of birth" }, type: "date" }
+    birthDate: { name: { NL: "geboortedatum", EN: "date of birth" }, type: "date", check: checkBirth },
+    email: { name: { NL: "email adres", EN: "email address" }, type: "text", check: checkEmail, default: '' },
   },
   bike: {
     name: { name: { NL: "Koosnaam", EN: "Given name" }, type: "text", check: checkName, default: '--' },
@@ -70,10 +74,10 @@ var FORMS = {
   },
   meal: {
     _simple_: true,
-    mealFri: { name: { NL: "Maaltijd vrijdagavond", EN: "Meal Friday evening" }, price: "&euro; 4", type: "select", options: countOptions },
-    breakfastSat: { name: { NL: "Ontbijt zaterdagochtend", EN: "Breakfast Saturday morning" }, price: "&euro; 2", type: "select", options: countOptions },
-    mealSat: { name: { NL: "Maaltijd zaterdagavond", EN: "Meal Saturday evening" }, price: "&euro; 4", type: "select", options: countOptions },
-    breakfastSun: { name: { NL: "Ontbijt zondagochtend", EN: "Breakfast Sunday morning" }, price: "&euro; 2", type: "select", options: countOptions },
+    mealFri: { name: { NL: "Maaltijd vrijdagavond", EN: "Meal Friday evening" }, price: "&euro; 10", type: "select", options: countOptions },
+    breakfastSat: { name: { NL: "Ontbijt zaterdagochtend", EN: "Breakfast Saturday morning" }, price: "&euro; 6.50", type: "select", options: countOptions },
+    mealSat: { name: { NL: "Maaltijd zaterdagavond", EN: "Meal Saturday evening" }, price: "&euro; 17.50", type: "select", options: countOptions },
+    breakfastSun: { name: { NL: "Ontbijt zondagochtend", EN: "Breakfast Sunday morning" }, price: "&euro; 6,50", type: "select", options: countOptions },
     mealPlan: { name: { NL: "Alle maaltijden pakket", EN: "All of the above package" }, price: "&euro; 27.50", type: "select", options: countOptions }
   }
 }
@@ -129,7 +133,6 @@ function initData() {
   } catch(e) {
     DATA = {}
   }
-console.log(DATA)
   for (var k in FORMS) if (!DATA[k]) DATA[k] = {}
 }
 
@@ -143,23 +146,40 @@ function initLanguage() {
 }
 
 /* field value validation functions */
-function checkName(val,itemKey,k) {
+function checkName(val,itemKey,id) {
   val = val.trim()
-  var name = FORMS[itemKey][k].name.EN
-  toggleError(itemKey+'-'+k,val && val.length>=2 ? '' : 'Error: enter a valid '+name+'.')
+  var name = FORMS[itemKey][id].name.EN
+  toggleError(itemKey+'-'+id,val && val.length>=2 ? '' : 'Error: enter a valid '+name+'.')
   return val
 }
 
-function checkRadio(val,itemKey,k) {
-  toggleError(itemKey+'-'+k,val !== undefined ? '' : 'Error: select a value.')
+function checkRadio(val,itemKey,id) {
+  toggleError(itemKey+'-'+id,val !== undefined ? '' : 'Error: select a value.')
   return val
 }
 
-function checkSelect(val,itemKey,k) {
-  toggleError(itemKey+'-'+k,val !== '_' ? '' : '<span class="EN">Error: select a value.</span><span class="NL">Fout: kies een waarde</span>')
+function checkSelect(val,itemKey,id) {
+  toggleError(itemKey+'-'+id,val !== '_' ? '' : '<span class="EN">Error: select a value.</span><span class="NL">Fout: kies een waarde.</span>')
+  return val
+}
+
+function checkEmail(val,itemKey,id) {
+  var re = /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
+  toggleError(itemKey+'-'+id,re.test(val) ? '' : '<span class="EN">Error: invalid email address.</span><span class="NL">Fout: ongeldig email adres.</span>')
   return val
 }
   
+function checkBirth(val,itemKey,id) {
+  if (val) {
+    var date = new Date(val)
+    var year = date.getFullYear()
+    toggleError(itemKey+'-'+id,year>1900 && year<2016 ? '' : '<span class="EN">Error: invalid year.</span><span class="NL">Fout: ongeldig jaar.</span>')
+  } else {
+    toggleError(itemKey+'-'+id,val ? '' : '<span class="EN">Error: enter a date.</span><span class="NL">Fout: vul een datum in.</span>')
+  }
+  return val
+}
+
 /* option generation functions */
 function genderOptions() {
   return {
@@ -217,8 +237,10 @@ function riderOptions() {
   var options = {}
   for (var k in riders) {
     var r = riders[k]
-    var name = k+'. '+r.firstName+' '+r.lastName
-    options[k] = { NL:name,EN:name }
+    if (r) {
+      var name = k+'. '+r.firstName+' '+r.lastName
+      options[k] = { NL:name,EN:name }
+    }
   }
   if (!count(options)) options = { '_': {NL:'maak eerst rijder aan',EN:'define riders first'} }
   return options
@@ -537,7 +559,10 @@ function addItem(itemKey) {
     if (k.charAt(0) == '_') continue
     var f = fields[k]
     var val = getValue(getElem(''+itemKey+'-'+k),f.type)
-    if (f.check) val = f.check(val,itemKey,k)
+    if (f.check) {
+      if ((f.default !== undefined) && val === f.default) toggleError(itemKey+'-'+k,'') 
+      else val = f.check(val,itemKey,k)
+    }
     values[k] = val
   }
   if (!FORM_ERROR) {
@@ -566,6 +591,7 @@ function selectLanguage(on) {
 }
 
 function summarize() {
+  getElem('comment').value = JSON.stringify(DATA)
   var a = []
   var races = [[],[],[]]
   for (var itemKey in FORMS) {
@@ -573,26 +599,34 @@ function summarize() {
     if (fields._day) races[fields._day].push(itemKey)
   }
 
-/*  var riders = {}
+/*
+  var riders = {}
   for (var d=1; d<=2; d++) {
     var rd = races[d]
     for (var i=0; i<rd.length; i++) {
-      var values = DATA[rd[i]]
+      var itemKey = rd[i]
+      var item = DATA[itemKey]
+      
       var r = values.rider
       if (!riders[r]) riders[r] = [[],[],[]] 
       riders[r][d].push(rd[i])
     }
   }
 */
+
   getElem('summary').innerHTML = a.join('')+JSON.stringify(races)
 }
 
 </script>
 </head>
 <body onload="initData(); for (var k in FORMS) initForm(k); initLanguage()">
+<!-- start page--><div id="page">
+<img src="http://www.cyclevision.nl/wp-content/uploads/2017/02/cvheader2017blauw.png"/>
+<!-- start forms--><div id="forms">
 <input type="button" value="ENGLISH" onclick="selectLanguage('EN')">&nbsp;<input type="button" value="NEDERLANDS" onclick="selectLanguage('NL')">
 <p><span class="EN">Welcome to the <b>CycleVision registration module</b>. It allows you to
-register multiple riders with multiple bikes.<br/>Fill out the forms below, 
+register multiple riders with multiple bikes.<br/>If you are not participating in any races, you can also use the <a href="http://www.ligfiets.net/event/3771/cycle-vision.html">simple form at Ligfiets.net</a>.
+<br/>Fill out the forms below, 
 click [Done] at the bottom, and you will be taken back to the Ligfiets.net
 registration page where you can confirm and pay.</span><span class="NL">Welkom bij de <b>CycleVision registratie module</b>. Hiermee kun je meerder rijders met verschillende fietsen inschrijven voor de races.<br/>Vul de formulieren hieronder in, druk daarna helemaal onderaan op [Gereed], en je wordt teruggeleid naar de Ligfiets.net inschrijfpagina waar je kunt bevestigen en betalen.</span>
 </p>
@@ -674,6 +708,13 @@ Under construction / In aanbouw.
 <pre id="post-data">
 
 </pre>
+
+<form action="">
+  <input type="hidden" id="comment" name="comment"/>
+  <input type="submit"/>
+</form>
 </p>
 
+<!-- end forms--></div>
+<!-- end page--></div>
 </body></html>
