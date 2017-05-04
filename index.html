@@ -74,11 +74,11 @@ var FORMS = {
   },
   meal: {
     _simple_: true,
+    mealPlan: { name: { NL: "Alle maaltijden pakket", EN: "All meals package" }, price: "&euro; 27.50", type: "select", options: countOptions },
     mealFri: { name: { NL: "Maaltijd vrijdagavond", EN: "Meal Friday evening" }, price: "&euro; 10", type: "select", options: countOptions },
     breakfastSat: { name: { NL: "Ontbijt zaterdagochtend", EN: "Breakfast Saturday morning" }, price: "&euro; 6.50", type: "select", options: countOptions },
     mealSat: { name: { NL: "Maaltijd zaterdagavond", EN: "Meal Saturday evening" }, price: "&euro; 17.50", type: "select", options: countOptions },
-    breakfastSun: { name: { NL: "Ontbijt zondagochtend", EN: "Breakfast Sunday morning" }, price: "&euro; 6,50", type: "select", options: countOptions },
-    mealPlan: { name: { NL: "Alle maaltijden pakket", EN: "All of the above package" }, price: "&euro; 27.50", type: "select", options: countOptions }
+    breakfastSun: { name: { NL: "Ontbijt zondagochtend", EN: "Breakfast Sunday morning" }, price: "&euro; 6,50", type: "select", options: countOptions }
   }
 }
 
@@ -381,11 +381,15 @@ function setValue(field,value) {
 function setOptions(field,type,options) {
   if (type == 'select') {
     var val = getValue(field)
+    // remove old options
+    for (var k=field.options.length-1; k>=0; k--) field.remove(k)
+    // add new options
     for (var k in options) {
       var o = options[k]
       var oElem = document.createElement('OPTION')
       oElem.value = k
       oElem.text = o.EN+(o.NL != o.EN ? ' / '+o.NL : '')
+      if (k == val) oElem.selected = true
       field.add(oElem,null)
     }
   }
@@ -591,30 +595,52 @@ function selectLanguage(on) {
 }
 
 function summarize() {
-  getElem('comment').value = JSON.stringify(DATA)
   var a = []
+  getElem('submit-comment').value = JSON.stringify(DATA)
+  var values = DATA['camping']
+  a.push('<ul>')
+  for (var k in values) {
+    var elem = getElem('submit-camping-'+k)
+    if (elem) elem.value = values[k]
+  }
+  a.push('<li><span class="NL">Op vrijdag kampeer je met '+(values.adultFri || 0)+' volwassenen en '+(values.childFri || 0)+' kinderen.</span><span class="EN">On Friday, you camp with '+(values.adultFri || 0)+' adults and '+(values.childFri || 0)+' children.</span></li>')
+  a.push('<li><span class="NL">Op zaterdag kampeer je met '+(values.adultSat || 0)+' volwassenen en '+(values.childSat || 0)+' kinderen.</span><span class="EN">On Saturday, you camp with '+(values.adultSat || 0)+' adults and '+(values.childSat || 0)+' children.</span></li>')
+  var values = DATA['meal']
+  for (var k in values) {
+    var elem = getElem('submit-meal-'+k)
+    if (elem) elem.value = values[k]
+  }
+  a.push('<li><span class="NL">Maaltijden ... wordt aan gewerkt.</span><span class="EN">Meals ... under construction.</span></li>')
+  /* compute days that riders are racing */
   var races = [[],[],[]]
   for (var itemKey in FORMS) {
     var fields = FORMS[itemKey]
     if (fields._day) races[fields._day].push(itemKey)
   }
 
-/*
-  var riders = {}
+  var riderRaces = {}
   for (var d=1; d<=2; d++) {
     var rd = races[d]
     for (var i=0; i<rd.length; i++) {
       var itemKey = rd[i]
-      var item = DATA[itemKey]
-      
-      var r = values.rider
-      if (!riders[r]) riders[r] = [[],[],[]] 
-      riders[r][d].push(rd[i])
+      var br = DATA[itemKey] // bike+rider
+      for (var k in br) {
+        var r = br[k].rider
+        if (!riderRaces[r]) riderRaces[r] = [[],[],[]]
+        riderRaces[r][d].push(itemKey)
+      }
     }
   }
-*/
+  for (var r in riderRaces) {
+    var sat = riderRaces[r][1].length ? 'races "'+riderRaces[r][1].join('","')+'"' : 'nothing'
+    var sun = riderRaces[r][2].length ? 'races "'+riderRaces[r][2].join('","')+'"' : 'nothing'
+    var zat = riderRaces[r][1].length ? 'wedstrijden "'+riderRaces[r][1].join('","')+'"' : 'niets'
+    var zon = riderRaces[r][2].length ? 'wedstrijden "'+riderRaces[r][1].join('","')+'"' : 'niets'
+    a.push('<li><span class="EN">Rider '+r+' rides '+sat+' on Saturday and '+sun+' on Sunday.</span><span class="NL">Rijder '+r+' rijdt '+zat+' op zaterdag en '+zon+' op zondag.</span></li>')
+  }  
+  a.push('</ul>')
 
-  getElem('summary').innerHTML = a.join('')+JSON.stringify(races)
+  getElem('summary').innerHTML = a.join('')
 }
 
 </script>
@@ -626,9 +652,12 @@ function summarize() {
 <input type="button" value="ENGLISH" onclick="selectLanguage('EN')">&nbsp;<input type="button" value="NEDERLANDS" onclick="selectLanguage('NL')">
 <p><span class="EN">Welcome to the <b>CycleVision registration module</b>. It allows you to
 register multiple riders with multiple bikes.<br/>If you are not participating in any races, you can also use the <a href="http://www.ligfiets.net/event/3771/cycle-vision.html">simple form at Ligfiets.net</a>.
+<br/>Make sure you are logged in to your <a href="https://www.ligfiets.net/user/login" "target="_blank">Ligfiets.net account</a> before you continue.
 <br/>Fill out the forms below, 
 click [Done] at the bottom, and you will be taken back to the Ligfiets.net
-registration page where you can confirm and pay.</span><span class="NL">Welkom bij de <b>CycleVision registratie module</b>. Hiermee kun je meerder rijders met verschillende fietsen inschrijven voor de races.<br/>Vul de formulieren hieronder in, druk daarna helemaal onderaan op [Gereed], en je wordt teruggeleid naar de Ligfiets.net inschrijfpagina waar je kunt bevestigen en betalen.</span>
+registration page where you can confirm and pay.</span><span class="NL">Welkom bij de <b>CycleVision registratie module</b>. Hiermee kun je meerdere rijders met verschillende fietsen inschrijven voor de races.<br/>Als je geen races rijdt kun je ook het <a href="http://www.ligfiets.net/event/3771/cycle-vision.html">simpele Ligfiets.net formulier</a> gebruiken.
+<br/>Zorg dat je ingelogd bent op <a href="https://www.ligfiets.net/user/login" "target="_blank">Ligfiets.net</a> voordat je verder gaat.
+<br/>Vul de formulieren hieronder in, druk daarna helemaal onderaan op [Gereed], en je wordt teruggeleid naar de Ligfiets.net inschrijfpagina waar je kunt bevestigen en betalen.</span>
 </p>
 <h2>Camping</h2>
 
@@ -703,15 +732,22 @@ yourself.</span><span class="NL">Vul voor iedere rijder die je aanmeldt de gegev
 
 <h2><span class="EN">Confirm and pay</span><span class="NL">Bevestig en betaal</span></h2>
 
-Under construction / In aanbouw.
-<p>Post data:
-<pre id="post-data">
-
-</pre>
-
-<form action="">
-  <input type="hidden" id="comment" name="comment"/>
-  <input type="submit"/>
+<form action="https://www.ligfiets.net/create/event/registration?id=3771" method="post">
+  <input type="hidden" id="submit-camping-adultFri" name="stuffs[stuff_630]"/>
+  <input type="hidden" id="submit-camping-childFri" name="stuffs[stuff_631]"/>
+  <input type="hidden" id="submit-camping-adultSat" name="stuffs[stuff_632]"/>
+  <input type="hidden" id="submit-camping-childSat" name="stuffs[stuff_633]"/>
+  <input type="hidden" id="submit-meal-mealPlan" name="stuffs[stuff_634]"/>
+  <input type="hidden" id="submit-meal-mealFri" name="stuffs[stuff_635]"/>
+  <input type="hidden" id="submit-meal-breakfastSat" name="stuffs[stuff_636]"/>
+  <input type="hidden" id="submit-meal-mealSat" name="stuffs[stuff_637]"/>
+  <input type="hidden" id="submit-meal-breakfastSun" name="stuffs[stuff_638]"/>
+  <input type="hidden" id="submit-races-satSun" name="stuffs[stuff_639]"/>
+  <input type="hidden" id="submit-races-sat" name="stuffs[stuff_640]"/>
+  <input type="hidden" id="submit-races-sun" name="stuffs[stuff_641]"/>
+  <input type="hidden" id="submit-comment" name="comment"/>
+  <span class="EN">Make sure you are logged in to your <a href="https://www.ligfiets.net/user/login" "target="_blank">Ligfiets.net account</a> before you continue.</span><span class="NL">Zorg dat je ingelogd bent op <a href="https://www.ligfiets.net/user/login" "target="_blank">Ligfiets.net</a> voordat je verder gaat.</span>
+  <p><input type="submit" id="submit" value="Go to payment / Ga naar betalen"/></p>
 </form>
 </p>
 
