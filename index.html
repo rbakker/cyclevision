@@ -134,6 +134,7 @@ function initData() {
     DATA = {}
   }
   for (var k in FORMS) if (!DATA[k]) DATA[k] = {}
+  summarize()
 }
 
 function initLanguage() {
@@ -552,6 +553,7 @@ function simpleChange(itemKey,k) {
   var val = getValue(elem)
   DATA[itemKey][k] = val
   setCookie('DATA',JSON.stringify(DATA))
+  summarize()
 }
 
 function addItem(itemKey) {
@@ -574,6 +576,7 @@ function addItem(itemKey) {
     setCookie('DATA',JSON.stringify(DATA))
     updateItems(itemKey)
     updateForms(itemKey)    
+    summarize()
   }
 }
 
@@ -583,6 +586,7 @@ function deleteItem(itemKey) {
   setCookie('DATA',JSON.stringify(DATA))
   updateItems(itemKey)
   updateForms(itemKey)    
+  summarize()
 }
 
 function selectLanguage(on) {
@@ -687,38 +691,38 @@ yourself.</span><span class="NL">Vul voor iedere rijder die je aanmeldt de gegev
 </div>
 
 <h3><span class="EN">Race components</span><span class="NL">Wedstrijd onderdelen</span></h3>
-<span class="EN">Enter for each race which rider+bike combinations will participate.</span><span class="NL">Vul voor elke race de deelnemende rijder+fiets combinaties in.</span>
-<h3><span class="EN">1 hour time trial</span><span class="NL">1 uurs tijdrit</span></h3>
+<span class="EN">Enter for each race which rider+bike combinations will participate. In case of a tandem, also enter the stoker+bike combination.</span><span class="NL">Vul voor elke race de deelnemende rijder+fiets combinaties in. Voeg in geval van een tandem ook de stoker+fiets combinatie toe.</span>
+<h3><span class="EN">1 hour time trial (Saturday)</span><span class="NL">1 uurs tijdrit (Zaterdag)</span></h3>
 <div id="onehour-list">
 </div>
 <div id="onehour-form">
 </div>
 
-<h3><span class="EN">Fastest lap indoor</span><span class="NL">Snelste ronde velodrome</span></h3>
+<h3><span class="EN">Fastest lap indoor (Saturday)</span><span class="NL">Snelste ronde velodrome (Zaterdag)</span></h3>
 <div id="indoor1lap-list">
 </div>
 <div id="indoor1lap-form">
 </div>
 
-<h3><span class="EN">Fastest lap outdoor</span><span class="NL">Snelste ronde buiten</span></h3>
-<div id="outdoor1lap-list">
-</div>
-<div id="outdoor1lap-form">
-</div>
-
-<h3><span class="EN">Criterium for single-track bikes</span><span class="NL">Criterium voor tweewielers</span></h3>
+<h3><span class="EN">Criterium for single-track bikes (Saturday)</span><span class="NL">Criterium voor tweewielers (Zaterdag)</span></h3>
 <div id="singletrack-list">
 </div>
 <div id="singletrack-form">
 </div>
 
-<h3><span class="EN">Criterium for multi-track bikes</span><span class="NL">Criterium voor drie/vierwielers</span></h3>
+<h3><span class="EN">Criterium for multi-track bikes (Saturday)</span><span class="NL">Criterium voor drie/vierwielers (Zaterdag)</span></h3>
 <div id="multitrack-list">
 </div>
 <div id="multitrack-form">
 </div>
 
-<h3><span class="EN">Combined 3 and 6 hour race</span><span class="NL">Gecombineerde 3/6 uurs race</span></h3>
+<h3><span class="EN">Fastest lap outdoor (Sunday)</span><span class="NL">Snelste ronde buiten (Zondag)</span></h3>
+<div id="outdoor1lap-list">
+</div>
+<div id="outdoor1lap-form">
+</div>
+
+<h3><span class="EN">Combined 3 and 6 hour race (Sunday)</span><span class="NL">Gecombineerde 3/6 uurs race (Zondag)</span></h3>
 <span class="EN">Note: the 6 hour race will only proceed with 10 or more participants.</span>
 <div id="threehour-list">
 </div>
@@ -727,7 +731,7 @@ yourself.</span><span class="NL">Vul voor iedere rijder die je aanmeldt de gegev
 
 <h2><span class="EN">Order summary</span><span class="NL">Besteloverzicht</span></h2>
 
-<button onclick="summarize()"><span class="EN">Create/update order summary</span><span class="NL">Maak/ververs besteloverzicht</span></button>
+<!--button onclick="summarize()"><span class="EN">Create/update order summary</span><span class="NL">Maak/ververs besteloverzicht</span></button-->
 <div id="summary"></div>
 
 <h2><span class="EN">Confirm and pay</span><span class="NL">Bevestig en betaal</span></h2>
