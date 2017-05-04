@@ -13,6 +13,136 @@ span.EN { display: inline }
 <script type="text/javascript">
 "use strict"
 
+var DATA = {}
+
+var FORMS = {
+  rider: {
+    firstName: { name: { NL: "voornaam", EN: "first name" }, type: "text", check: checkName },
+    lastName: { name: { NL: "achternaam", EN: "last name" }, type: "text", check: checkName },
+    gender: { name: { NL: "geslacht", EN: "gender" }, type: "radio", check: checkRadio, options: genderOptions },
+    birthDate: { name: { NL: "geboortedatum", EN: "date of birth" }, type: "date" }
+  },
+  bike: {
+    name: { name: { NL: "Koosnaam", EN: "Given name" }, type: "text", check: checkName, default: '--' },
+    standard: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: null, options: standardOptions },
+    make: { name: { NL: "&nbsp;&nbsp;Merk en type", EN: "&nbsp;&nbsp;Make and type" }, type: "text", check: checkName, default: '', preset: makePreset },
+    track: { name: { NL: "&nbsp;&nbsp;Aantal wielen", EN: "&nbsp;&nbsp;Number of wheels" }, type: "radio", check: checkRadio, options: trackOptions, preset: trackPreset },
+    fairing: { name: { NL: "&nbsp;&nbsp;Stroomlijn", EN: "&nbsp;&nbsp;Fairing" }, type: "radio", check: checkRadio, options: fairingOptions, preset: fairingPreset },
+    drive: { name: { NL: "&nbsp;&nbsp;Aandrijving", EN: "&nbsp;&nbsp;Drive" }, type: "select", check: checkSelect, options: driveOptions, preset: drivePreset }
+  },
+  onehour: {
+    _day: 1,
+    rider: { name: { NL: "rijder", EN: "rider" }, type: "select", check: checkSelect, options: riderOptions },
+    bike: { name: { NL: "fiets", EN: "bike" }, type: "select", check: checkSelect, options: bikeOptions },
+  },
+  indoor1lap: {
+    _day: 1,
+    rider: { name: { NL: "rijder", EN: "rider" }, type: "select", check: checkSelect, options: riderOptions },
+    bike: { name: { NL: "fiets", EN: "bike" }, type: "select", check: checkSelect, options: bikeOptions },
+  },
+  singletrack: {
+    _day: 1,
+    rider: { name: { NL: "rijder", EN: "rider" }, type: "select", check: checkSelect, options: riderOptions },
+    bike: { name: { NL: "fiets", EN: "bike" }, type: "select", check: checkSelect, options: bikeOptions },
+  },
+  multitrack: {
+    _day: 1,
+    rider: { name: { NL: "rijder", EN: "rider" }, type: "select", check: checkSelect, options: riderOptions },
+    bike: { name: { NL: "fiets", EN: "bike" }, type: "select", check: checkSelect, options: bikeOptions },
+  },
+  outdoor1lap: {
+    _day: 2,
+    rider: { name: { NL: "rijder", EN: "rider" }, type: "select", check: checkSelect, options: riderOptions },
+    bike: { name: { NL: "fiets", EN: "bike" }, type: "select", check: checkSelect, options: bikeOptions },
+  },
+  threehour: {
+    _day: 2,
+    rider: { name: { NL: "Rijder", EN: "Rider" }, type: "select", check: checkSelect, options: riderOptions },
+    bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions },
+    duration: { name: { NL: "duur", EN: "duration" }, type: "radio", check: checkSelect, options: durationOptions }
+  },
+  camping: {
+    _simple_: true,
+    adultFri: { name: { NL: "Volwassenen vrijdag/zaterdag", EN: "Adults Friday/Saturday" }, price: "&euro; 4", type: "select", options: countOptions },
+    childFri: { name: { NL: "Kinderen &lt;16 vrijdag/zaterdag", EN: "Children &lt;16 Friday/Saturday" }, price: "&euro; 2", type: "select", options: countOptions },
+    adultSat: { name: { NL: "Volwassenen zaterdag/zondag", EN: "Adults Saturday/Sunday" }, price: "&euro; 4", type: "select", options: countOptions },
+    childSat: { name: { NL: "Kinderen &lt;16 zaterdag/zondag", EN: "Children &lt;16 Saturday/Sunday" }, price: "&euro; 2", type: "select", options: countOptions }
+  },
+  meal: {
+    _simple_: true,
+    mealFri: { name: { NL: "Maaltijd vrijdagavond", EN: "Meal Friday evening" }, price: "&euro; 4", type: "select", options: countOptions },
+    breakfastSat: { name: { NL: "Ontbijt zaterdagochtend", EN: "Breakfast Saturday morning" }, price: "&euro; 2", type: "select", options: countOptions },
+    mealSat: { name: { NL: "Maaltijd zaterdagavond", EN: "Meal Saturday evening" }, price: "&euro; 4", type: "select", options: countOptions },
+    breakfastSun: { name: { NL: "Ontbijt zondagochtend", EN: "Breakfast Sunday morning" }, price: "&euro; 2", type: "select", options: countOptions },
+    mealPlan: { name: { NL: "Alle maaltijden pakket", EN: "All of the above package" }, price: "&euro; 27.50", type: "select", options: countOptions }
+  }
+}
+
+var LANG = {
+  rider: {
+    NL: ['rijder','rijders'],
+    EN: ['rider','riders']
+  },
+  bike: {
+    NL: ['fiets','fietsen'],
+    EN: ['bike','bikes']
+  },
+  onehour: {
+    NL: ['rijder+fiets','rijders+fietsen voor de 1-uurs race'],
+    EN: ['rider+bike','riders+bikes for the 1 hour race']
+  },
+  indoor1lap: {
+    NL: ['rijder+fiets','rijders+fietsen voor de snelste ronde in het velodrome'],
+    EN: ['rider+bike','riders+bikes for the fastest lap indoor']
+  },
+  outdoor1lap: {
+    NL: ['rijder+fiets','rijders+fietsen voor de snelste ronde op de buitenbaan'],
+    EN: ['rider+bike','riders+bikes for the fastest lap outdoor circuit']
+  },
+  singletrack: {
+    NL: ['rijder+fiets','rijders+fietsen voor het tweewieler criterium'],
+    EN: ['rider+bike','riders+bikes for the single track race']
+  },
+  multitrack: {
+    NL: ['rijder+fiets','rijders+fietsen voor het multi-track criterium'],
+    EN: ['rider+bike','riders+bikes for the multi track race']
+  },
+  threehour: {
+    NL: ['rijder+fiets','rijders+fietsen voor de gecombineerde 3/6 uurs race'],
+    EN: ['rider+bike','riders+bikes for the combined 3/6 hour race']
+  },
+  camping: {
+    NL: ['camping','camping'],
+    EN: ['camping','camping']
+  },
+  meal: {
+    NL: ['maaltijd','maaltijden'],
+    EN: ['meal','meals']
+  }
+}
+
+var FORM_ERROR = false
+
+function initData() {
+  try {
+    DATA = JSON.parse(getCookie('DATA'))
+  } catch(e) {
+    DATA = {}
+  }
+console.log(DATA)
+  for (var k in FORMS) if (!DATA[k]) DATA[k] = {}
+}
+
+function initLanguage() {
+  try {
+    var on = JSON.parse(getCookie('LANG'))
+  } catch(e) {
+    on = 'EN'
+  }
+  selectLanguage(on)
+}
+
+/* field value validation functions */
 function checkName(val,itemKey,k) {
   val = val.trim()
   var name = FORMS[itemKey][k].name.EN
@@ -30,6 +160,7 @@ function checkSelect(val,itemKey,k) {
   return val
 }
   
+/* option generation functions */
 function genderOptions() {
   return {
     male: {EN:'male',NL:'man'},
@@ -40,10 +171,19 @@ function genderOptions() {
 function standardOptions() {
   return {
     _: {EN:'choose ...',NL:'kies ...'},
+    unfaired2: {EN:'Unfaired bike',NL:'Ongestroomlijnde tweewieler'},
+    unfaired3: {EN:'Unfaired trike',NL:'Ongestroomlijnde trike'},
+    tailfaired2: {EN:'Tailfaired bike',NL:'Tweewieler met staartpunt'},
+    tailfaired3: {EN:'Tailfaired trike',NL:'Trike met staartpunt'},
+    fullyfaired2: {EN:'Fully faired bicycle',NL:'Volledig gestroomlijnde tweeweler'},
+    fullyfaired3: {EN:'Fully faired tricycle',NL:'Volledig gestroomlijnde trike'},
     quest: {EN:'Velomobiel.nl Quest',NL:'Velomobiel.nl Quest'},
-    df: {EN:'Intercitybikes DF',NL:'Intercitybikes DF'},
-    mango: {EN:'Sinner Mango',NL:'Sinner Mango'},
-    other: {EN:'other ...',NL:'anders ...'}
+    df: {EN:'InterCityBike DF',NL:'InterCityBike DF'},
+    rowing: {EN:'Rowing bike',NL:'Roeifiets'},
+    thys222: {EN:'Thys 222 rowing bike',NL:'Thys 222 roeifiets'},
+    tandem: {EN:'Tandem',NL:'Tandem'},
+    handbike: {EN:'Handbike',NL:'Handbike'},
+    other: {EN:'Other ...',NL:'Anders ...'}
   }
 }
 
@@ -54,121 +194,255 @@ function trackOptions() {
   }
 }
 
-function categoryOptions() {
+function fairingOptions() {
   return {
-    _: {EN:'choose ...',NL:'kies ...'},
-    faired: {EN:'fully faired',NL:'gestroomlijnd'},
+    full: {EN:'fully faired',NL:'gestroomlijnd'},
     front: {EN:'front fairing',NL:'alleen voorkant'},
     rear: {EN:'tail fairing',NL:'staartpunt'},
-    unfaired: {EN:'unfaired',NL:'ongestroomlijnd'}
+    none: {EN:'unfaired',NL:'ongestroomlijnd'}
   }
+}
+
+function driveOptions() {
+  return {
+    pedal: {EN:'circular pedaling',NL:'circular pedaalaandrijving'},
+    rowing: {EN:'rowing movement',NL:'roeibeweging'},
+    hand: {EN:'hand drive',NL:'handaabndrijving'},
+    special: {EN:'special',NL:'speciaal'}
+  }
+}
+
+function riderOptions() {
+  var riders = DATA.rider
+  var options = {}
+  for (var k in riders) {
+    var r = riders[k]
+    var name = k+'. '+r.firstName+' '+r.lastName
+    options[k] = { NL:name,EN:name }
+  }
+  if (!count(options)) options = { '_': {NL:'maak eerst rijder aan',EN:'define riders first'} }
+  return options
+}
+
+function bikeOptions() {
+  var bikes = DATA.bike
+  var options = {}
+  for (var k in bikes) {
+    var r = bikes[k]
+    var name = k+'. '+r.name+' '+r.make
+    options[k] = { NL:name,EN:name }
+  }
+  if (!count(options)) options = { '_': {NL:'maak eerst fiets aan',EN:'define bikes first'} }
+  return options
+}
+
+function durationOptions() {
+  return {
+    '3':{EN: '3 hours', NL: '3 uur'},
+    '6':{EN: '6 hours', NL: '6 uur'}
+  }
+}
+
+function countOptions() {
+  var options = {}
+  for (var i=0; i<100; i++) {
+    var s = ''+i
+    options[s] = {EN:s,NL:s}
+  }
+  return options
 }
 
 function makePreset(itemKey) {
   var ans = {
-    quest: 'Velomobiel.nl Quest'
+    thys222: 'Thys 222',
+    quest: 'Velomobiel.nl Quest',
+    df: 'InterCityBike DF'
   }
   return ans[fieldValue(itemKey,'standard')]
 }
 
 function trackPreset(itemKey) {
   var ans = {
-    quest: 'multi'
+    unfaired2: 'single',
+    unfaired3: 'multi',
+    tailfaired2: 'single',
+    tailfaired3: 'multi',
+    fullyfaired2: 'single',
+    fullyfaired3: 'multi',
+    quest: 'multi',
+    df: 'multi',
+    thys222: 'single'
   }
   return ans[fieldValue(itemKey,'standard')]
 }
 
-function categoryPreset(itemKey) {
+function fairingPreset(itemKey) {
   var ans = {
-    quest: 'faired'
+    unfaired2: 'none',
+    unfaired3: 'none',
+    tailfaired2: 'tail',
+    tailfaired3: 'tail',
+    fullyfaired2: 'full',
+    fullyfaired3: 'full',
+    quest: 'full',
+    df: 'full'
   }
-console.log(ans[fieldValue(itemKey,'standard')])
   return ans[fieldValue(itemKey,'standard')]
 }
 
-var FORMS = {
-  rider: {
-    firstName: { name: { NL: "voornaam", EN: "first name" }, type: "text", check: checkName },
-    lastName: { name: { NL: "achternaam", EN: "last name" }, type: "text", check: checkName },
-    gender: { name: { NL: "geslacht", EN: "gender" }, type: "radio", check: checkRadio, options: genderOptions },
-    birthDate: { name: { NL: "geboortedatum", EN: "date of birth" }, type: "date" }
-  },
-  bike: {
-    name: { name: { NL: "koosnaam", EN: "given name" }, type: "text", check: checkName, default: '--' },
-    standard: { name: { NL: "fiets", EN: "bike" }, type: "select", check: null, options: standardOptions },
-    make: { name: { NL: "&nbsp;&nbsp;merk en type", EN: "&nbsp;&nbsp;make and type" }, type: "text", check: checkName, default: '', preset: makePreset },
-    track: { name: { NL: "&nbsp;&nbsp;aantal wielen", EN: "&nbsp;&nbsp;number of wheels" }, type: "radio", check: checkRadio, options: trackOptions, preset: trackPreset },
-    category: { name: { NL: "&nbsp;&nbsp;categorie", EN: "&nbsp;&nbsp;category" }, type: "select", check: checkSelect, options: categoryOptions, preset: categoryPreset }
+function drivePreset(itemKey) {
+  var ans = {
+    unfaired2: 'pedal',
+    unfaired3: 'pedal',
+    tailfaired2: 'pedal',
+    tailfaired3: 'pedal',
+    fullyfaired2: 'pedal',
+    fullyfaired3: 'pedal',
+    quest: 'pedal',
+    df: 'pedal',
+    rowing: 'pedal',
+    thys222: 'rowing',
+    tandem: 'pedal',
+    handbike: 'hand'
   }
+  return ans[fieldValue(itemKey,'standard')]
 }
 
-var LANG = {
-  rider: {
-    NL: ['rijder','rijders'],
-    EN: ['rider','riders']
-  },
-  bike: {
-    NL: ['fiets','fietsen'],
-    EN: ['bike','bikes']
+/* utility functions */
+function setCookie(key,value) {
+  document.cookie = key + "=" + value;
+}
+function getCookie(key) {
+  var parts = decodeURIComponent(document.cookie).split(';');
+  for(var i=0; i<parts.length; i++) {
+    var c = parts[i].trim()
+    if (c.indexOf(key+'=') == 0) {
+      return c.substr(key.length+1);
+    }
   }
+  return "";
 }
-
-var DATA = {
-  rider: {},
-  bike: {}
-}
-
-var FORM_ERROR = false
-
 function getElem(id) { return document.getElementById(id) }
 function next(h) { var n=0; for (var k in h) if (Number(k)>=n) n = Number(k)+1; return n }
 function count(h) { var n=0; for (var k in h) if (h.hasOwnProperty(k)) n++; return n }
 
-function getValue(field,type) {
-  if (type == 'text') return field.value
-  if (type == 'date') return field.value
-  if (type == 'select') return field.options[field.selectedIndex].value
-  if (type == 'radio') {
-    var radios = document.getElementsByName(field.id);
-    for (var i in radios) if (radios[i].checked) { console.log(radios[i]); return radios[i].value }
+function getValue(field) {
+  if (field.tagName.toLowerCase() == 'input') {
+    if (field.type == 'text') return field.value
+    if (field.type == 'date') return field.value
+    if (field.type == 'radio') {
+      var radios = document.getElementsByName(field.id);
+      for (var i in radios) if (radios[i].checked) return radios[i].value
+    }
+  } else if (field.tagName.toLowerCase() == 'select') {
+    return field.selectedIndex < 0 ? undefined : field.options[field.selectedIndex].value
   }
 }
 
-function setValue(field,type,value) {
-  if (type == 'text') field.value = value
-  if (type == 'date') field.value = value
-  if (type == 'select') {
+function setValue(field,value) {
+  if (field.tagName.toLowerCase() == 'input') {
+    if (field.type == 'text') field.value = value
+    if (field.type == 'date') field.value = value
+    if (field.type == 'radio') {
+      var radios = document.getElementsByName(field.id);
+      for (var i=0; i<radios.length; i++) {
+        var r = radios[i]
+        r.checked = (r.value == value ? true : false)
+      }
+    }
+  } else if (field.tagName.toLowerCase() == 'select') {
     var options = field.options
     for (var i=0; i<options.length; i++) if (options[i].value == value) field.selectedIndex = i
   }
-  if (type == 'radio') {
-    var radios = document.getElementsByName(field.id);
-    for (var i=0; i<radios.length; i++) {
-      var r = radios[i]
-      r.checked = (r.value == value ? true : false)
+}
+
+function setOptions(field,type,options) {
+  if (type == 'select') {
+    var val = getValue(field)
+    for (var k in options) {
+      var o = options[k]
+      var oElem = document.createElement('OPTION')
+      oElem.value = k
+      oElem.text = o.EN+(o.NL != o.EN ? ' / '+o.NL : '')
+      field.add(oElem,null)
     }
   }
 }
 
 function fieldValue(itemKey,k) {
-  var fields = FORMS[itemKey]
-  var f = fields[k]
-  return getValue(getElem(itemKey+'-'+k),f.type)
+  return getValue(getElem(itemKey+'-'+k))
 }
 
+/* initialization of forms and values */
+function initForm(itemKey) {
+  var a = []
+  var fields = FORMS[itemKey]
+  var complex = !fields._simple_
+  a.push('<table class="add">')
+  a.push('<tr>')
+  if (complex) {
+    var itemName = LANG[itemKey]
+    var nameHtml = '<span class="EN">'+itemName.EN[0]+'</span><span class="NL">'+itemName.NL[0]+'</span>'
+    a.push('<td rowspan="'+(2*count(fields)+2)+'" style="padding-right:2ex"><div class="id">'+nameHtml+'<br><select id="'+itemKey+'-id" onchange="selectItem(getValue(this),\''+itemKey+'\')"><option selected value="0">0</option></select></div></td>')
+  }
+  a.push('<td colspan="4"><div id="'+itemKey+'-form-error" class="error"/></td></tr>')
+  for (var k in fields) {
+    if (k.charAt(0) == '_') continue
+    var f = fields[k]
+    a.push('<tr><td colspan="4"><div id="'+itemKey+'-'+k+'-error" class="error"/></td></tr>')
+    a.push('<tr><td class="key"><span class="EN">'+f.name.EN+'</span><span class="NL">'+f.name.NL+'</span></td><td class="price">'+(f.price || '')+'</td><td class="colon">:</td><td class="value">')
+    if (f.type == 'text') a.push('<input id="'+itemKey+'-'+k+'" type="text" value=""/>')
+    if (f.type == 'date') a.push('<input id="'+itemKey+'-'+k+'" type="date" value=""/>')
+    if (f.type == 'select') {
+      a.push('<select id="'+itemKey+'-'+k+'"'+(complex ? 'onchange="updateForm(\''+itemKey+'\')"' : 'onchange="simpleChange(\''+itemKey+'\',\''+k+'\')"')+'>')
+      var options = f.options()
+      for (var n in options) {
+        var o = options[n]
+        var optionName = o.EN+(o.NL != o.EN ? ' / '+o.NL : '')
+        a.push('<option value="'+n+'">'+optionName+'</option>')
+      }
+      a.push('</select>')
+    }
+    if (f.type == 'radio') {
+      var options = f.options()
+      var first = true
+      for (var n in options) {
+        var optionName = '<span class="EN">'+options[n].EN+'</span><span class="NL">'+options[n].NL+'</span>'
+        a.push('<input '+(first ? 'id="'+itemKey+'-'+k+'" ' : '')+' name="'+itemKey+'-'+k+'" type="radio" value="'+n+'"/>'+optionName)
+        first = false
+      }
+    }
+    a.push('</td></tr>')
+  }
+  if (complex) {
+    var editHtml = '<span class="EN">Add/edit this '+itemName.EN[0]+'</span><span class="NL">Wijzig/Voeg '+itemName.NL[0]+' toe</span>'
+    var deleteHtml = '<span class="EN">Delete this '+itemName.EN[0]+'</span><span class="NL">Verwijder '+itemName.NL[0]+'</span>'
+    a.push('<tr><td colspan="4"><button onclick="addItem(\''+itemKey+'\')">'+editHtml+'</button>&nbsp;<button onclick="deleteItem(\''+itemKey+'\')"/>'+deleteHtml+'</td></tr>')
+  }
+  a.push('</table>')
+  getElem(itemKey+'-form').innerHTML = a.join('')
+  if (complex) updateItems(itemKey);
+  else updateValues(itemKey) 
+}
+
+/* callback functions */
 function selectItem(id,itemKey) {
   var items = DATA[itemKey]
   var r = items[id]
   var fields = FORMS[itemKey]
   if (!r) { 
-    r = {}; for (var k in fields) { r[k] = fields[k].default || '' } 
-    console.log('r',r)
+    r = {}; 
+    for (var k in fields) { 
+      if (k.charAt(0) == '_') continue
+      r[k] = fields[k].default || ''
+    }
   }
   var elem = getElem(''+itemKey+'-id')
   var options = elem.options
   for (var k in options) { if (options[k].value == id) elem.selectedIndex = k }
   for (var k in fields) {
-    setValue(getElem(itemKey+'-'+k),fields[k].type,r[k])
+    if (k.charAt(0) == '_') continue
+    setValue(getElem(itemKey+'-'+k),r[k])
   }
 }
 
@@ -197,61 +471,43 @@ function updateItems(itemKey) {
   selectItem(id,itemKey)
 }
 
-function initForm(itemKey) {
-  var a = []
-  var fields = FORMS[itemKey]
-  var itemName = LANG[itemKey]
-  var nameHtml = '<span class="EN">'+itemName.EN[0]+'</span><span class="NL">'+itemName.NL[0]+'</span>'
-  a.push('<table class="add">')
-  a.push('<tr><td rowspan="'+(2*count(fields)+2)+'" style="padding-right:2ex"><div class="id">'+nameHtml+'<br><select id="'+itemKey+'-id" onchange="selectItem(getValue(this,\'select\'),\''+itemKey+'\')"><option selected value="0">0</option></select></div></td><td colspan="3"><div id="'+itemKey+'-form-error" class="error"/></td></tr>')
-  for (var k in fields) {
-    var f = fields[k]
-    a.push('<tr><td colspan="3"><div id="'+itemKey+'-'+k+'-error" class="error"/></td></tr>')
-    a.push('<tr><td class="key"><span class="EN">'+f.name.EN+'</span><span class="NL">'+f.name.NL+'</span></td><td class="colon">:</td><td class="value">')
-    if (f.type == 'text') a.push('<input id="'+itemKey+'-'+k+'" type="text" value=""/>')
-    if (f.type == 'date') a.push('<input id="'+itemKey+'-'+k+'" type="date" value=""/>')
-    if (f.type == 'select') {
-      a.push('<select id="'+itemKey+'-'+k+'" onchange="updateForm(\''+itemKey+'\')">')
-      var options = f.options()
-      for (var n in options) {
-        var o = options[n]
-        var optionName = o.EN+(o.NL != o.EN ? ' / '+o.NL : '')
-        a.push('<option value="'+n+'">'+optionName+'</option>')
-      }
-      a.push('</select>')
-    }
-    if (f.type == 'radio') {
-      var options = f.options()
-      var first = true
-      for (var n in options) {
-        var optionName = '<span class="EN">'+options[n].EN+'</span><span class="NL">'+options[n].NL+'</span>'
-        a.push('<input '+(first ? 'id="'+itemKey+'-'+k+'" ' : '')+' name="'+itemKey+'-'+k+'" type="radio" value="'+n+'"/>'+optionName)
-        first = false
-      }
-    }
-    a.push('</td></tr>')
+function updateValues(itemKey) {
+  var values = DATA[itemKey]
+  for (var k in values) {
+    var elem = getElem(''+itemKey+'-'+k)
+    setValue(elem,values[k])
   }
-  var editHtml = '<span class="EN">Add/edit this '+itemName.EN[0]+'</span><span class="NL">Wijzig/Voeg '+itemName.NL[0]+' toe</span>'
-  var deleteHtml = '<span class="EN">Delete this '+itemName.EN[0]+'</span><span class="NL">Verwijder '+itemName.NL[0]+'</span>'
-  a.push('<tr><td colspan="3"><button onclick="addItem(\''+itemKey+'\')">'+editHtml+'</button>&nbsp;<button onclick="deleteItem(\''+itemKey+'\')"/>'+deleteHtml+'</td></tr>')
-  a.push('</table>')
-  getElem(itemKey+'-form').innerHTML = a.join('')
 }
 
+/* updates form values and options */
 function updateForm(itemKey) {
   var fields = FORMS[itemKey]
-  
-  var values
   for (var k in fields) {
+    if (k.charAt(0) == '_') continue
     var f = fields[k]
-    var val
-    if (f.preset) val = f.preset(itemKey)
+
+    var val = f.preset && f.preset(itemKey)
     var elem = getElem(itemKey+'-'+k)
     if (val) {
-      setValue(elem,f.type,val)
+      setValue(elem,val)
       elem.disabled = true
     } else {
-      elem.disabled = undefined
+      elem.disabled = false
+    }
+
+    var options = (f.type == 'select') && f.options(itemKey)
+    if (options) {
+      setOptions(elem,f.type,options)
+    }
+  }
+}
+
+function updateForms(modifiedItem) {
+  var skip = true
+  for (var itemKey in FORMS) {
+    if (itemKey == modifiedItem) skip = false
+    if (!skip) {
+      updateForm(itemKey)
     }
   }
 }
@@ -265,12 +521,20 @@ function toggleError(id,msg) {
   }
 }
 
+function simpleChange(itemKey,k) {
+  var elem = getElem(itemKey+'-'+k)
+  var val = getValue(elem)
+  DATA[itemKey][k] = val
+  setCookie('DATA',JSON.stringify(DATA))
+}
+
 function addItem(itemKey) {
   FORM_ERROR = false;
   var id = getElem(''+itemKey+'-id').value.trim()
   var fields = FORMS[itemKey]
   var values = {}
   for (var k in fields) {
+    if (k.charAt(0) == '_') continue
     var f = fields[k]
     var val = getValue(getElem(''+itemKey+'-'+k),f.type)
     if (f.check) val = f.check(val,itemKey,k)
@@ -278,31 +542,72 @@ function addItem(itemKey) {
   }
   if (!FORM_ERROR) {
     DATA[itemKey][id] = values
+    setCookie('DATA',JSON.stringify(DATA))
     updateItems(itemKey)
+    updateForms(itemKey)    
   }
 }
 
 function deleteItem(itemKey) {
   var id = getElem(''+itemKey+'-id').value.trim()
   DATA[itemKey][id] = null
+  setCookie('DATA',JSON.stringify(DATA))
   updateItems(itemKey)
+  updateForms(itemKey)    
 }
 
-function selectLanguage(on,off) {
+function selectLanguage(on) {
+  var off = (on == 'NL' ? 'EN' : 'NL')
   var elems = document.getElementsByClassName(off)
   for (var i=0; i<elems.length; i++) elems[i].style.display='none'
   var elems = document.getElementsByClassName(on)
   for (var i=0; i<elems.length; i++) elems[i].style.display='inline'
+  setCookie('LANG',JSON.stringify(on))
 }
+
+function summarize() {
+  var a = []
+  var races = [[],[],[]]
+  for (var itemKey in FORMS) {
+    var fields = FORMS[itemKey]
+    if (fields._day) races[fields._day].push(itemKey)
+  }
+
+/*  var riders = {}
+  for (var d=1; d<=2; d++) {
+    var rd = races[d]
+    for (var i=0; i<rd.length; i++) {
+      var values = DATA[rd[i]]
+      var r = values.rider
+      if (!riders[r]) riders[r] = [[],[],[]] 
+      riders[r][d].push(rd[i])
+    }
+  }
+*/
+  getElem('summary').innerHTML = a.join('')+JSON.stringify(races)
+}
+
 </script>
 </head>
-<body onload="initForm('rider'); updateItems('rider'); initForm('bike'); updateItems('bike')">
-<input type="button" value="ENGLISH" onclick="selectLanguage('EN','NL')">&nbsp;<input type="button" value="NEDERLANDS" onclick="selectLanguage('NL','EN')">
+<body onload="initData(); for (var k in FORMS) initForm(k); initLanguage()">
+<input type="button" value="ENGLISH" onclick="selectLanguage('EN')">&nbsp;<input type="button" value="NEDERLANDS" onclick="selectLanguage('NL')">
 <p><span class="EN">Welcome to the <b>CycleVision registration module</b>. It allows you to
 register multiple riders with multiple bikes.<br/>Fill out the forms below, 
 click [Done] at the bottom, and you will be taken back to the Ligfiets.net
 registration page where you can confirm and pay.</span><span class="NL">Welkom bij de <b>CycleVision registratie module</b>. Hiermee kun je meerder rijders met verschillende fietsen inschrijven voor de races.<br/>Vul de formulieren hieronder in, druk daarna helemaal onderaan op [Gereed], en je wordt teruggeleid naar de Ligfiets.net inschrijfpagina waar je kunt bevestigen en betalen.</span>
 </p>
+<h2>Camping</h2>
+
+<div id="camping-form">
+</div>
+
+<h2><span class="EN">Meals</span><span class="NL">Maaltijden</span></h2>
+
+<div id="meal-form">
+</div>
+
+<h2><span class="EN">Races</span><span class="NL">Wedstrijden</span></h2>
+
 <h3>Team</h3>
 <span class="EN">Enter the details for all riders that you are registering, including
 yourself.</span><span class="NL">Vul voor iedere rijder die je aanmeldt de gegevens in, ook voor jezelf.</span>
@@ -317,4 +622,58 @@ yourself.</span><span class="NL">Vul voor iedere rijder die je aanmeldt de gegev
 </div>
 <div id="bike-form">
 </div>
+
+<h3><span class="EN">Race components</span><span class="NL">Wedstrijd onderdelen</span></h3>
+<span class="EN">Enter for each race which rider+bike combinations will participate.</span><span class="NL">Vul voor elke race de deelnemende rijder+fiets combinaties in.</span>
+<h3><span class="EN">1 hour time trial</span><span class="NL">1 uurs tijdrit</span></h3>
+<div id="onehour-list">
+</div>
+<div id="onehour-form">
+</div>
+
+<h3><span class="EN">Fastest lap indoor</span><span class="NL">Snelste ronde velodrome</span></h3>
+<div id="indoor1lap-list">
+</div>
+<div id="indoor1lap-form">
+</div>
+
+<h3><span class="EN">Fastest lap outdoor</span><span class="NL">Snelste ronde buiten</span></h3>
+<div id="outdoor1lap-list">
+</div>
+<div id="outdoor1lap-form">
+</div>
+
+<h3><span class="EN">Criterium for single-track bikes</span><span class="NL">Criterium voor tweewielers</span></h3>
+<div id="singletrack-list">
+</div>
+<div id="singletrack-form">
+</div>
+
+<h3><span class="EN">Criterium for multi-track bikes</span><span class="NL">Criterium voor drie/vierwielers</span></h3>
+<div id="multitrack-list">
+</div>
+<div id="multitrack-form">
+</div>
+
+<h3><span class="EN">Combined 3 and 6 hour race</span><span class="NL">Gecombineerde 3/6 uurs race</span></h3>
+<span class="EN">Note: the 6 hour race will only proceed with 10 or more participants.</span>
+<div id="threehour-list">
+</div>
+<div id="threehour-form">
+</div>
+
+<h2><span class="EN">Order summary</span><span class="NL">Besteloverzicht</span></h2>
+
+<button onclick="summarize()"><span class="EN">Create/update order summary</span><span class="NL">Maak/ververs besteloverzicht</span></button>
+<div id="summary"></div>
+
+<h2><span class="EN">Confirm and pay</span><span class="NL">Bevestig en betaal</span></h2>
+
+Under construction / In aanbouw.
+<p>Post data:
+<pre id="post-data">
+
+</pre>
+</p>
+
 </body></html>
