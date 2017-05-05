@@ -226,7 +226,7 @@ function fairingOptions() {
 
 function driveOptions() {
   return {
-    pedal: {EN:'circular pedaling',NL:'circular pedaalaandrijving'},
+    pedal: {EN:'regular',NL:'normaal'},
     rowing: {EN:'rowing movement',NL:'roeibeweging'},
     hand: {EN:'hand drive',NL:'handaabndrijving'},
     special: {EN:'special',NL:'speciaal'}
@@ -239,7 +239,7 @@ function riderOptions() {
   for (var k in riders) {
     var r = riders[k]
     if (r) {
-      var name = k+'. '+r.firstName+' '+r.lastName
+      var name = r.firstName+' '+r.lastName
       options[k] = { NL:name,EN:name }
     }
   }
@@ -252,7 +252,7 @@ function bikeOptions() {
   var options = {}
   for (var k in bikes) {
     var r = bikes[k]
-    var name = k+'. '+r.name+' '+r.make
+    var name = '"'+r.name+'" '+r.make
     options[k] = { NL:name,EN:name }
   }
   if (!count(options)) options = { '_': {NL:'maak eerst fiets aan',EN:'define bikes first'} }
@@ -268,7 +268,7 @@ function durationOptions() {
 
 function countOptions() {
   var options = {}
-  for (var i=0; i<100; i++) {
+  for (var i=0; i<=10; i++) {
     var s = ''+i
     options[s] = {EN:s,NL:s}
   }
@@ -475,13 +475,20 @@ function selectItem(id,itemKey) {
 
 function updateItems(itemKey) {
   var items = DATA[itemKey]
+  var fields = FORMS[itemKey]
   var a = []
   a.push('<div class="list"><span class="EN">List of '+LANG[itemKey].EN[1]+'</span><span class="NL">Lijst met '+LANG[itemKey].NL[1]+'</span>:<table>')
   for (var id in items) {
     var r = items[id]
     if (r) {
       a.push('<tr onclick="selectItem('+id+',\''+itemKey+'\')"><td>'+id+'</td>')
-      for (var k in r) a.push('<td>'+r[k]+'</td>')
+      for (var k in r) {
+        var f = fields[k]
+        var opts = (f && f.options && f.options()) || {}
+        var v = opts[r[k]]
+        v = v ? '<span class="NL">'+v.NL+'</span><span class="EN">'+v.EN+'</span>' : r[k]
+        a.push('<td>'+v+'</td>')
+      }
       a.push('</tr>')
     }
   }
