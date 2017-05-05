@@ -9,16 +9,21 @@ improve summary with option values instead of keys
 
 <head><meta charset="utf-8"/>
 <style type="text/css">
-body { background: #ddd; margin: 0; padding: 0; height: 100%; }
+/* span.NL and span.EN must be the AT THE TOP */
+span.NL { display: none }
+span.EN { display: inline }
+/* the rest can be in any position */
+body { background: #ddd; margin: 0; padding: 0; width: 100%; height: 100%; }
 div#page { max-width: 1146px; margin: 0em auto; border-left: 1px solid #aaa; border-right: 1px solid #aaa; background: #fff; min-height: 101%; }
 div#forms { padding: 1% }
-td { border-left: 2px solid #eee; white-space: nowrap }
+td { border-left: 2px; padding: 0ex 1ex; white-space: nowrap;  }
+table.list { border-collapse: collapse }
+table.list td { border-top: 1px solid #888 }
+table.list tr:hover { background: #4F8 }
 div.list { border: 2px solid blue; margin: 1ex 0ex; padding: 1ex; margin-bottom: 0px; border-radius: 1ex }
 table.add { border: 1px solid blue; background: #f0faff; margin: 1ex; padding: 1ex; margin-top: 0px; padding-top:0px}
 div.error { background: #fff; color: #800; font-weight: bold; display: block }
 div.id { text-align: center; background: #eee; padding: 1ex; border-radius: 1ex; border: 1px solid black}
-span.NL { display: none }
-span.EN { display: inline }
 </style>
 <script type="text/javascript">
 "use strict"
@@ -27,11 +32,11 @@ var DATA = {}
 
 var FORMS = {
   rider: {
-    firstName: { name: { NL: "voornaam", EN: "first name" }, type: "text", check: checkName },
-    lastName: { name: { NL: "achternaam", EN: "last name" }, type: "text", check: checkName },
-    gender: { name: { NL: "geslacht", EN: "gender" }, type: "radio", check: checkRadio, options: genderOptions },
-    birthDate: { name: { NL: "geboortedatum", EN: "date of birth" }, type: "date", check: checkBirth },
-    email: { name: { NL: "email adres", EN: "email address" }, type: "text", check: checkEmail, default: '' },
+    firstName: { name: { NL: "Voornaam", EN: "First name" }, type: "text", check: checkName },
+    lastName: { name: { NL: "Achternaam", EN: "Last name" }, type: "text", check: checkName },
+    gender: { name: { NL: "Geslacht", EN: "Gender" }, type: "radio", check: checkRadio, options: genderOptions },
+    birthDate: { name: { NL: "Geboortedatum", EN: "Date of birth" }, type: "date", check: checkBirth },
+    email: { name: { NL: "Email adres", EN: "Email address" }, type: "text", check: checkEmail, default: '' },
   },
   bike: {
     name: { name: { NL: "Koosnaam", EN: "Given name" }, type: "text", check: checkName, default: '--' },
@@ -43,34 +48,34 @@ var FORMS = {
   },
   onehour: {
     _day: 1,
-    rider: { name: { NL: "rijder", EN: "rider" }, type: "select", check: checkSelect, options: riderOptions },
-    bike: { name: { NL: "fiets", EN: "bike" }, type: "select", check: checkSelect, options: bikeOptions },
+    rider: { name: { NL: "Rijder", EN: "Rider" }, type: "select", check: checkSelect, options: riderOptions },
+    bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions },
   },
   indoor1lap: {
     _day: 1,
-    rider: { name: { NL: "rijder", EN: "rider" }, type: "select", check: checkSelect, options: riderOptions },
-    bike: { name: { NL: "fiets", EN: "bike" }, type: "select", check: checkSelect, options: bikeOptions },
+    rider: { name: { NL: "Rijder", EN: "Rider" }, type: "select", check: checkSelect, options: riderOptions },
+    bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions },
   },
   singletrack: {
     _day: 1,
-    rider: { name: { NL: "rijder", EN: "rider" }, type: "select", check: checkSelect, options: riderOptions },
-    bike: { name: { NL: "fiets", EN: "bike" }, type: "select", check: checkSelect, options: bikeOptions },
+    rider: { name: { NL: "Rijder", EN: "Rider" }, type: "select", check: checkSelect, options: riderOptions },
+    bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions },
   },
   multitrack: {
     _day: 1,
-    rider: { name: { NL: "rijder", EN: "rider" }, type: "select", check: checkSelect, options: riderOptions },
-    bike: { name: { NL: "fiets", EN: "bike" }, type: "select", check: checkSelect, options: bikeOptions },
+    rider: { name: { NL: "Rijder", EN: "Rider" }, type: "select", check: checkSelect, options: riderOptions },
+    bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions },
   },
   outdoor1lap: {
     _day: 2,
-    rider: { name: { NL: "rijder", EN: "rider" }, type: "select", check: checkSelect, options: riderOptions },
-    bike: { name: { NL: "fiets", EN: "bike" }, type: "select", check: checkSelect, options: bikeOptions },
+    rider: { name: { NL: "Rijder", EN: "Rider" }, type: "select", check: checkSelect, options: riderOptions },
+    bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions },
   },
   threehour: {
     _day: 2,
     rider: { name: { NL: "Rijder", EN: "Rider" }, type: "select", check: checkSelect, options: riderOptions },
     bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions },
-    duration: { name: { NL: "duur", EN: "duration" }, type: "radio", check: checkSelect, options: durationOptions }
+    duration: { name: { NL: "Duur", EN: "Duration" }, type: "radio", check: checkSelect, options: durationOptions }
   },
   camping: {
     _simple_: true,
@@ -198,7 +203,7 @@ function genderOptions() {
 
 function standardOptions() {
   return {
-    _: {EN:'choose ...',NL:'kies ...'},
+    _: {EN:'Choose ...',NL:'Kies ...'},
     unfaired2: {EN:'Unfaired bike',NL:'Ongestroomlijnde tweewieler'},
     unfaired3: {EN:'Unfaired trike',NL:'Ongestroomlijnde trike'},
     tailfaired2: {EN:'Tailfaired bike',NL:'Tweewieler met staartpunt'},
@@ -217,26 +222,26 @@ function standardOptions() {
 
 function trackOptions() {
   return {
-    single: {EN:'two or less',NL:'twee of minder'},
-    multi: {EN:'three or more',NL:'drie of meer'}
+    single: {EN:'Two or less',NL:'Twee of minder'},
+    multi: {EN:'Three or more',NL:'Drie of meer'}
   }
 }
 
 function fairingOptions() {
   return {
-    full: {EN:'fully faired',NL:'gestroomlijnd'},
-    front: {EN:'front fairing',NL:'alleen voorkant'},
-    rear: {EN:'tail fairing',NL:'staartpunt'},
-    none: {EN:'unfaired',NL:'ongestroomlijnd'}
+    full: {EN:'Fully faired',NL:'Gestroomlijnd'},
+    front: {EN:'Front fairing',NL:'Alleen voorkant'},
+    rear: {EN:'Tail fairing',NL:'Staartpunt'},
+    none: {EN:'Unfaired',NL:'Ongestroomlijnd'}
   }
 }
 
 function driveOptions() {
   return {
-    pedal: {EN:'regular',NL:'normaal'},
-    rowing: {EN:'rowing movement',NL:'roeibeweging'},
-    hand: {EN:'hand drive',NL:'handaabndrijving'},
-    special: {EN:'special',NL:'speciaal'}
+    pedal: {EN:'Regular',NL:'Normaal'},
+    rowing: {EN:'Rowing movement',NL:'Roeibeweging'},
+    hand: {EN:'Hand drive',NL:'Handaabndrijving'},
+    special: {EN:'Special',NL:'Speciaal'}
   }
 }
 
@@ -250,7 +255,7 @@ function riderOptions() {
       options[k] = { NL:name,EN:name }
     }
   }
-  if (!count(options)) options = { '_': {NL:'maak eerst rijder aan',EN:'define riders first'} }
+  if (!count(options)) options = { '_': {NL:'Maak eerst rijder aan',EN:'Define riders first'} }
   return options
 }
 
@@ -262,7 +267,7 @@ function bikeOptions() {
     var name = '"'+r.name+'" '+r.make
     options[k] = { NL:name,EN:name }
   }
-  if (!count(options)) options = { '_': {NL:'maak eerst fiets aan',EN:'define bikes first'} }
+  if (!count(options)) options = { '_': {NL:'Maak eerst fiets aan',EN:'Define bikes first'} }
   return options
 }
 
@@ -484,7 +489,7 @@ function updateItems(itemKey) {
   var items = DATA[itemKey]
   var fields = FORMS[itemKey]
   var a = []
-  a.push('<div class="list"><span class="EN">List of '+LANG[itemKey].EN[1]+'</span><span class="NL">Lijst met '+LANG[itemKey].NL[1]+'</span>:<table>')
+  a.push('<div class="list"><span class="EN">List of '+LANG[itemKey].EN[1]+'</span><span class="NL">Lijst met '+LANG[itemKey].NL[1]+'</span>:<table class="list">')
   for (var id in items) {
     var r = items[id]
     if (r) {
@@ -499,7 +504,7 @@ function updateItems(itemKey) {
       a.push('</tr>')
     }
   }
-  a.push('<tr onclick="selectItem('+next(items)+',\''+itemKey+'\')"><td>...</td></tr></tr>')
+  a.push('<tr onclick="selectItem('+next(items)+',\''+itemKey+'\')"><td colspan="100"><span class="EN">(next)</span><span class="NL">(volgende)</span></td></tr></tr>')
   a.push('</table></div>')
   getElem(''+itemKey+'-list').innerHTML = a.join('')
   a = []
@@ -604,12 +609,28 @@ function deleteItem(itemKey) {
 }
 
 function selectLanguage(on) {
+  var styleSheet = document.styleSheets[0]
+  var rules = styleSheet.cssRules;
+  var remove = styleSheet.deleteRule || styleSheet.removeRule
+  remove.apply(styleSheet,[rules[0]])
+  remove.apply(styleSheet,[rules[1]])
+  var insert = styleSheet.insertRule || styleSheet.addRule
+  if (on == 'EN') {
+    insert.apply(styleSheet,['span.NL { display: none }',0])
+    insert.apply(styleSheet,['span.EN { display: inline }',0])
+  } else {
+    insert.apply(styleSheet,['span.NL { display: inline }',0])
+    insert.apply(styleSheet,['span.EN {display: none }',0])
+  }  
+console.log(styleSheet)
+/*
   var off = (on == 'NL' ? 'EN' : 'NL')
   var elems = document.getElementsByClassName(off)
   for (var i=0; i<elems.length; i++) elems[i].style.display='none'
   var elems = document.getElementsByClassName(on)
   for (var i=0; i<elems.length; i++) elems[i].style.display='inline'
   setCookie('LANG',JSON.stringify(on))
+*/
 }
 
 function summarize() {
@@ -667,9 +688,10 @@ function summarize() {
 </head>
 <body onload="initData(); for (var k in FORMS) initForm(k); initLanguage()">
 <!-- start page--><div id="page">
-<img src="http://www.cyclevision.nl/wp-content/uploads/2017/02/cvheader2017blauw.png"/>
+<img src="http://www.cyclevision.nl/wp-content/uploads/2017/02/cvheader2017blauw.png" style="width: 1146px; height:150px"/>
 <!-- start forms--><div id="forms">
-<input type="button" value="ENGLISH" onclick="selectLanguage('EN')">&nbsp;<input type="button" value="NEDERLANDS" onclick="selectLanguage('NL')">
+<p>Choose your language / Kies uw taal</p>
+<div class="lang"><input type="button" value="ENGLISH" onclick="selectLanguage('EN')">&nbsp;<input type="button" value="NEDERLANDS" onclick="selectLanguage('NL')"></div>
 <p><span class="EN">Welcome to the <b>CycleVision registration module</b>. It allows you to
 register multiple riders with multiple bikes.<br/>If you are not participating in any races, you can also use the <a href="http://www.ligfiets.net/event/3771/cycle-vision.html">simple form at Ligfiets.net</a>.
 <br/>Make sure you are logged in to your <a href="https://www.ligfiets.net/user/login" "target="_blank">Ligfiets.net account</a> before you continue.
@@ -739,18 +761,17 @@ yourself.</span><span class="NL">Vul voor iedere rijder die je aanmeldt de gegev
 </div>
 
 <h3><span class="EN">Combined 3 and 6 hour race (Sunday)</span><span class="NL">Gecombineerde 3/6 uurs race (Zondag)</span></h3>
-<span class="EN">Note: the 6 hour race will only proceed with 10 or more participants.</span>
+<span class="EN">Note: the 6 hour race will only proceed with 10 or more participants.</span><span class="EN">Let op: de 6 uursrace gaat alleen door als er tenmminste 10 deelnemers zijn.</span>
 <div id="threehour-list">
 </div>
 <div id="threehour-form">
 </div>
 
-<h2><span class="EN">Order summary</span><span class="NL">Besteloverzicht</span></h2>
+<!--h2><span class="EN">Confirm and pay</span><span class="NL">Bevestig en betaal</span></h2-->
 
+<h2><span class="EN">Order summary and payment</span><span class="NL">Besteloverzicht en betaling</span></h2>
 Under construction / Wordt aan gewerkt
 <div id="summary"></div>
-
-<h2><span class="EN">Confirm and pay</span><span class="NL">Bevestig en betaal</span></h2>
 
 <form action="https://www.ligfiets.net/create/event/registration?id=3771" method="post">
   <input type="hidden" id="submit-camping-adultFri" name="stuffs[stuff_630]"/>
