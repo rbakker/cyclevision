@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <html>
+<!-- TODO 
+language via global style
+include meals
+calculate costs
+improve summary with option values instead of keys
+-->
+
 <head><meta charset="utf-8"/>
 <style type="text/css">
-body { float: left; position: relative; left: 50%; background: #fbfbff }
-div#page { width: 1146px; position: relative; float: left; left: -50%; background: #fff}
+body { background: #ddd; margin: 0; padding: 0; height: 100%; }
+div#page { max-width: 1146px; margin: 0em auto; border-left: 1px solid #aaa; border-right: 1px solid #aaa; background: #fff; min-height: 101%; }
 div#forms { padding: 1% }
-td { border-left: 2px solid #eee }
+td { border-left: 2px solid #eee; white-space: nowrap }
 div.list { border: 2px solid blue; margin: 1ex 0ex; padding: 1ex; margin-bottom: 0px; border-radius: 1ex }
 table.add { border: 1px solid blue; background: #f0faff; margin: 1ex; padding: 1ex; margin-top: 0px; padding-top:0px}
 div.error { background: #fff; color: #800; font-weight: bold; display: block }
@@ -636,9 +643,11 @@ function summarize() {
       var itemKey = rd[i]
       var br = DATA[itemKey] // bike+rider
       for (var k in br) {
-        var r = br[k].rider
-        if (!riderRaces[r]) riderRaces[r] = [[],[],[]]
-        riderRaces[r][d].push(itemKey)
+        if (br[k]) {        
+          var r = br[k].rider
+          if (!riderRaces[r]) riderRaces[r] = [[],[],[]]
+          riderRaces[r][d].push(itemKey)
+        }
       }
     }
   }
@@ -646,7 +655,7 @@ function summarize() {
     var sat = riderRaces[r][1].length ? 'races "'+riderRaces[r][1].join('","')+'"' : 'nothing'
     var sun = riderRaces[r][2].length ? 'races "'+riderRaces[r][2].join('","')+'"' : 'nothing'
     var zat = riderRaces[r][1].length ? 'wedstrijden "'+riderRaces[r][1].join('","')+'"' : 'niets'
-    var zon = riderRaces[r][2].length ? 'wedstrijden "'+riderRaces[r][1].join('","')+'"' : 'niets'
+    var zon = riderRaces[r][2].length ? 'wedstrijden "'+riderRaces[r][2].join('","')+'"' : 'niets'
     a.push('<li><span class="EN">Rider '+r+' rides '+sat+' on Saturday and '+sun+' on Sunday.</span><span class="NL">Rijder '+r+' rijdt '+zat+' op zaterdag en '+zon+' op zondag.</span></li>')
   }  
   a.push('</ul>')
@@ -738,7 +747,7 @@ yourself.</span><span class="NL">Vul voor iedere rijder die je aanmeldt de gegev
 
 <h2><span class="EN">Order summary</span><span class="NL">Besteloverzicht</span></h2>
 
-<!--button onclick="summarize()"><span class="EN">Create/update order summary</span><span class="NL">Maak/ververs besteloverzicht</span></button-->
+Under construction / Wordt aan gewerkt
 <div id="summary"></div>
 
 <h2><span class="EN">Confirm and pay</span><span class="NL">Bevestig en betaal</span></h2>
