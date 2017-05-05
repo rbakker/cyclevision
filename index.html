@@ -36,15 +36,17 @@ var FORMS = {
     lastName: { name: { NL: "Achternaam", EN: "Last name" }, type: "text", check: checkName },
     gender: { name: { NL: "Geslacht", EN: "Gender" }, type: "radio", check: checkRadio, options: genderOptions },
     birthDate: { name: { NL: "Geboortedatum", EN: "Date of birth" }, type: "date", check: checkBirth },
-    email: { name: { NL: "Email adres", EN: "Email address" }, type: "text", check: checkEmail, default: '' },
+    email: { name: { NL: "Email adres", EN: "Email address" }, type: "text", check: checkEmail, default: '(optional)' },
+    nickname: { name: { NL: "Bijnaam", EN: "Nick name" }, type: "text", check: checkName, default: '' },
   },
   bike: {
-    name: { name: { NL: "Koosnaam", EN: "Given name" }, type: "text", check: checkName, default: '--' },
-    standard: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: null, options: standardOptions },
+    name: { name: { NL: "Koosnaam", EN: "Given name" }, type: "text", check: checkName, default: '' },
+    standard: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: standardOptions },
     make: { name: { NL: "&nbsp;&nbsp;Merk en type", EN: "&nbsp;&nbsp;Make and type" }, type: "text", check: checkName, default: '', preset: makePreset },
     track: { name: { NL: "&nbsp;&nbsp;Aantal wielen", EN: "&nbsp;&nbsp;Number of wheels" }, type: "radio", check: checkRadio, options: trackOptions, preset: trackPreset },
     fairing: { name: { NL: "&nbsp;&nbsp;Stroomlijn", EN: "&nbsp;&nbsp;Fairing" }, type: "radio", check: checkRadio, options: fairingOptions, preset: fairingPreset },
-    drive: { name: { NL: "&nbsp;&nbsp;Aandrijving", EN: "&nbsp;&nbsp;Drive" }, type: "select", check: checkSelect, options: driveOptions, preset: drivePreset }
+    drive: { name: { NL: "&nbsp;&nbsp;Aandrijving", EN: "&nbsp;&nbsp;Drive" }, type: "select", check: checkSelect, options: driveOptions, preset: drivePreset },
+    comment: { name: { NL: "Bijzonderheden", EN: "Peculiarities" }, type: "text", check: checkName, default: '' }
   },
   onehour: {
     _day: 1,
@@ -79,18 +81,25 @@ var FORMS = {
   },
   camping: {
     _simple_: true,
-    adultFri: { name: { NL: "Volwassenen vrijdag/zaterdag", EN: "Adults Friday/Saturday" }, price: "&euro; 4", type: "select", options: countOptions },
-    childFri: { name: { NL: "Kinderen &lt;16 vrijdag/zaterdag", EN: "Children &lt;16 Friday/Saturday" }, price: "&euro; 2", type: "select", options: countOptions },
-    adultSat: { name: { NL: "Volwassenen zaterdag/zondag", EN: "Adults Saturday/Sunday" }, price: "&euro; 4", type: "select", options: countOptions },
-    childSat: { name: { NL: "Kinderen &lt;16 zaterdag/zondag", EN: "Children &lt;16 Saturday/Sunday" }, price: "&euro; 2", type: "select", options: countOptions }
+    adultFri: { name: { NL: "Volwassenen vrijdag/zaterdag", EN: "Adults Friday/Saturday" }, price: 4, type: "select", options: countOptions },
+    childFri: { name: { NL: "Kinderen &lt;16 vrijdag/zaterdag", EN: "Children &lt;16 Friday/Saturday" }, price: 2, type: "select", options: countOptions },
+    adultSat: { name: { NL: "Volwassenen zaterdag/zondag", EN: "Adults Saturday/Sunday" }, price: 4, type: "select", options: countOptions },
+    childSat: { name: { NL: "Kinderen &lt;16 zaterdag/zondag", EN: "Children &lt;16 Saturday/Sunday" }, price: 2, type: "select", options: countOptions }
   },
   meal: {
     _simple_: true,
-    mealPlan: { name: { NL: "Alle maaltijden pakket", EN: "All meals package" }, price: "&euro; 27.50", type: "select", options: countOptions },
-    mealFri: { name: { NL: "Maaltijd vrijdagavond", EN: "Meal Friday evening" }, price: "&euro; 10", type: "select", options: countOptions },
-    breakfastSat: { name: { NL: "Ontbijt zaterdagochtend", EN: "Breakfast Saturday morning" }, price: "&euro; 6.50", type: "select", options: countOptions },
-    mealSat: { name: { NL: "Maaltijd zaterdagavond", EN: "Meal Saturday evening" }, price: "&euro; 17.50", type: "select", options: countOptions },
-    breakfastSun: { name: { NL: "Ontbijt zondagochtend", EN: "Breakfast Sunday morning" }, price: "&euro; 6,50", type: "select", options: countOptions }
+    mealPlan: { name: { NL: "Alle maaltijden pakket", EN: "All meals package" }, price: 27.50, type: "select", options: countOptions },
+    mealFri: { name: { NL: "Maaltijd vrijdagavond", EN: "Meal Friday evening" }, price: 10, type: "select", options: countOptions },
+    breakfastSat: { name: { NL: "Ontbijt zaterdagochtend", EN: "Breakfast Saturday morning" }, price: 6.50, type: "select", options: countOptions },
+    mealSat: { name: { NL: "Maaltijd zaterdagavond", EN: "Meal Saturday evening" }, price: 17.50, type: "select", options: countOptions },
+    breakfastSun: { name: { NL: "Ontbijt zondagochtend", EN: "Breakfast Sunday morning" }, price: 6.50, type: "select", options: countOptions }
+  }
+}
+
+var HIDDEN = {   
+  race: {
+    oneDay: { price: 15 },
+    twoDays: { price: 25 }
   }
 }
 
@@ -403,6 +412,7 @@ function setOptions(field,type,options) {
       oElem.value = k
       oElem.text = o.EN+(o.NL != o.EN ? ' / '+o.NL : '')
       if (k == val) oElem.selected = true
+      if (k.charAt(0) == '_') oElem.disabled = true
       field.add(oElem,null)
     }
   }
@@ -429,7 +439,7 @@ function initForm(itemKey) {
     if (k.charAt(0) == '_') continue
     var f = fields[k]
     a.push('<tr><td colspan="4"><div id="'+itemKey+'-'+k+'-error" class="error"/></td></tr>')
-    a.push('<tr><td class="key"><span class="EN">'+f.name.EN+'</span><span class="NL">'+f.name.NL+'</span></td><td class="price">'+(f.price || '')+'</td><td class="colon">:</td><td class="value">')
+    a.push('<tr><td class="key"><span class="EN">'+f.name.EN+'</span><span class="NL">'+f.name.NL+'</span></td><td class="price">'+(f.price ? '&euro; '+f.price.toFixed(2) : '')+'</td><td class="colon">:</td><td class="value">')
     if (f.type == 'text') a.push('<input id="'+itemKey+'-'+k+'" type="text" value=""/>')
     if (f.type == 'date') a.push('<input id="'+itemKey+'-'+k+'" type="date" value=""/>')
     if (f.type == 'select') {
@@ -633,23 +643,88 @@ console.log(styleSheet)
 */
 }
 
+function getPrice(itemKey,keys) {
+  var values = DATA[itemKey]
+  var fields = FORMS[itemKey]
+  if (!keys) { keys = []; for (var k in values) keys.push(k) }
+  var price = 0
+  for (var i=0; i<keys.length; i++) {
+    var k = keys[i]
+    price += Number(values[k] || 0)*(fields[k].price || 0)
+  }
+  return price
+}
+
+function summaryItem() {
+  var a = []
+  a.push('<li>')
+  for (var i=0; i<arguments.length; i++) {
+    var fr = arguments[i]
+    a.push(typeof(fr)=='object' ? '<span class="EN">'+fr.EN+'</span><span class="NL">'+fr.NL+'</span>' : fr)
+  }
+  a.push('</li>')
+  return a.join('')
+}
+
 function summarize() {
   var a = []
   getElem('submit-comment').value = JSON.stringify(DATA)
+
+  // CAMPING
+  a.push('<b>Camping</b><ul>')
   var values = DATA['camping']
-  a.push('<ul>')
+  var fields = FORMS['camping']
+  // summary
+  var price = getPrice('camping',['adultFri','childFri'])
+  a.push(summaryItem( {NL:'Op vrijdag kampeer je met ',EN:'On Friday, you camp with '}, values.adultFri || 0, {NL:' volwassenen en ',EN:' adults and '}, values.childFri || 0, {NL:' kinderen. Dit kost &euro; ', EN:' children. This costs &euro; '}, price.toFixed(2)+'.' ))
+  price = getPrice('camping',['adultSat','childSat'])
+  a.push(summaryItem(
+    {NL:'Op zaterdag kampeer je met ',EN:'On Saturday, you camp with '},
+    values.adultSat || 0,
+    {NL:' volwassenen en ',EN:' adults and '},
+    values.childSat || 0,
+    {NL:' kinderen. Dit kost &euro; ', EN:' children. This costs &euro; '},
+    price.toFixed(2)+'.'
+  ))
+  // form values to be submitted
   for (var k in values) {
     var elem = getElem('submit-camping-'+k)
     if (elem) elem.value = values[k]
   }
-  a.push('<li><span class="NL">Op vrijdag kampeer je met '+(values.adultFri || 0)+' volwassenen en '+(values.childFri || 0)+' kinderen.</span><span class="EN">On Friday, you camp with '+(values.adultFri || 0)+' adults and '+(values.childFri || 0)+' children.</span></li>')
-  a.push('<li><span class="NL">Op zaterdag kampeer je met '+(values.adultSat || 0)+' volwassenen en '+(values.childSat || 0)+' kinderen.</span><span class="EN">On Saturday, you camp with '+(values.adultSat || 0)+' adults and '+(values.childSat || 0)+' children.</span></li>')
-  var values = DATA['meal']
+  
+  // MEALS
+  a.push('</ul><b>Meals</b><ul>')
+  values = DATA['meal']
+  fields = FORMS['meal']
+  // summary
+  price = getPrice('meal',['mealPlan'])
+  a.push(summaryItem(
+    {EN:'You are ordering ',NL:'Je bestelt '},
+    values.mealPlan || 0,
+    {EN:' meal-plans. This costs &euro; ',NL:' maaltijd-arrangementen. Dit kost &euro; '},
+    price.toFixed(2)+'.'
+  ))  
+  price = getPrice('meal',['mealFri','breakfastSat','mealSat','breakfastSun'])
+  a.push(summaryItem( 
+    {EN:'In addition, you order ',NL:'Daarnaast bestel je '}, 
+    values.mealFri || 0, 
+    {EN:'x Friday dinner, ',NL:'x vrijdag maaltijd, '}, 
+    values.breakfastSat || 0, 
+    {EN:'x Saturday breakfast, ',NL:'x zaterdag ontbijt, '}, 
+    values.mealSat || 0, 
+    {EN:'x Saturday dinner and ',NL:'x zaterdag maaltijd en '}, 
+    values.breakfastSun || 0, 
+    {EN:'x Sunday breakfast. This costs &euro; ',NL:'x zondag ontbijt. Dit kost &euro; '}, 
+    price+'.'
+  ))
+  // form values to be submitted
   for (var k in values) {
     var elem = getElem('submit-meal-'+k)
     if (elem) elem.value = values[k]
   }
-  a.push('<li><span class="NL">Maaltijden ... wordt aan gewerkt.</span><span class="EN">Meals ... under construction.</span></li>')
+
+  // RACES
+  a.push('</ul><b>Races</b><ul>')
   /* compute days that riders are racing */
   var races = [[],[],[]]
   for (var itemKey in FORMS) {
@@ -672,14 +747,37 @@ function summarize() {
       }
     }
   }
+  var numSatOnly = 0
+  var numSunOnly = 0
+  var numTwoDays = 0  
   for (var r in riderRaces) {
-    var sat = riderRaces[r][1].length ? 'races "'+riderRaces[r][1].join('","')+'"' : 'nothing'
-    var sun = riderRaces[r][2].length ? 'races "'+riderRaces[r][2].join('","')+'"' : 'nothing'
-    var zat = riderRaces[r][1].length ? 'wedstrijden "'+riderRaces[r][1].join('","')+'"' : 'niets'
-    var zon = riderRaces[r][2].length ? 'wedstrijden "'+riderRaces[r][2].join('","')+'"' : 'niets'
-    a.push('<li><span class="EN">Rider '+r+' rides '+sat+' on Saturday and '+sun+' on Sunday.</span><span class="NL">Rijder '+r+' rijdt '+zat+' op zaterdag en '+zon+' op zondag.</span></li>')
+    var sat = riderRaces[r][1]
+    var sun = riderRaces[r][2]
+    var numSat = sat.length
+    var numSun = sun.length
+    sat = numSat ? '"'+riderRaces[r][1].join('","')+'"' : ''
+    sun = numSun ? '"'+riderRaces[r][2].join('","')+'"' : ''
+    price = 0
+    if (numSat && numSun) { numTwoDays++; price = HIDDEN.race.twoDays.price }
+    else if (numSat) { numSatOnly++; price = HIDDEN.race.oneDay.price }
+    else if (numSun) { numSunOnly++; price = HIDDEN.race.oneDay.price }
+    a.push(summaryItem(
+      {EN:'Rider ',NL:'Rijder '},
+      r,
+      {EN:' participates in '+(sat || 'nothing'),NL:' doet mee aan '+(sat || 'niets')},
+      {EN:' on Saturday and '+(sun || 'nothing'),NL:' op zaterdag en '+(sun || 'niets')},
+      {EN:' on Sunday. This costs &euro; ',NL:' op Zondag. Dit kost &euro; '},
+      price+'.'
+    ))
   }  
   a.push('</ul>')
+  // form values to be submitted
+  var elem = getElem('submit-race-satSun')
+  if (elem) elem.value = (numTwoDays || '')
+  var elem = getElem('submit-race-sat')
+  if (elem) elem.value = (numSatOnly || '')
+  var elem = getElem('submit-race-sun')
+  if (elem) elem.value = (numSunOnly || '')
 
   getElem('summary').innerHTML = a.join('')
 }
@@ -783,9 +881,9 @@ Under construction / Wordt aan gewerkt
   <input type="hidden" id="submit-meal-breakfastSat" name="stuffs[stuff_636]"/>
   <input type="hidden" id="submit-meal-mealSat" name="stuffs[stuff_637]"/>
   <input type="hidden" id="submit-meal-breakfastSun" name="stuffs[stuff_638]"/>
-  <input type="hidden" id="submit-races-satSun" name="stuffs[stuff_639]"/>
-  <input type="hidden" id="submit-races-sat" name="stuffs[stuff_640]"/>
-  <input type="hidden" id="submit-races-sun" name="stuffs[stuff_641]"/>
+  <input type="hidden" id="submit-race-satSun" name="stuffs[stuff_639]"/>
+  <input type="hidden" id="submit-race-sat" name="stuffs[stuff_640]"/>
+  <input type="hidden" id="submit-race-sun" name="stuffs[stuff_641]"/>
   <input type="hidden" id="submit-comment" name="comment"/>
   <span class="EN">Make sure you are logged in to your <a href="https://www.ligfiets.net/user/login" "target="_blank">Ligfiets.net account</a> before you continue.</span><span class="NL">Zorg dat je ingelogd bent op <a href="https://www.ligfiets.net/user/login" "target="_blank">Ligfiets.net</a> voordat je verder gaat.</span>
   <p><input type="submit" id="submit" value="Go to payment / Ga naar betalen"/></p>
