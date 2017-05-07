@@ -12,7 +12,7 @@ span.EN { display: inline }
 /* the rest can be in any position */
 body { background: #ddd; margin: 0; padding: 0; width: 100%; height: 100%; }
 div#page { max-width: 1146px; margin: 0em auto; border-left: 1px solid #aaa; border-right: 1px solid #aaa; background: #fff; min-height: 101%; }
-div#forms { padding: 1% }
+div#main { padding: 1% }
 td { border-left: 2px; padding: 0ex 1ex; white-space: nowrap;  }
 table.list { border-collapse: collapse }
 table.list td { border-top: 1px solid #888 }
@@ -33,7 +33,8 @@ var FORMS = {
     firstName: { name: { NL: "Voornaam", EN: "First name" }, type: "text", check: checkName },
     lastName: { name: { NL: "Achternaam", EN: "Last name" }, type: "text", check: checkName },
     gender: { name: { NL: "Geslacht", EN: "Gender" }, type: "radio", check: checkRadio, options: genderOptions },
-    city: { name: { NL: "Woonplaats, land", EN: "City, country of residence" }, type: "radio", check: checkRadio, options: genderOptions },
+    city: { name: { NL: "Woonplaats", EN: "Place of residence" }, type: "text", check: checkName },
+    country: { name: { NL: "Land", EN: "Country" }, type: "text", check: checkName },
     birthDate: { name: { NL: "Geboortedatum", EN: "Date of birth" }, type: "date", check: checkBirth },
     email: { name: { NL: "Email adres", EN: "Email address" }, type: "text", check: checkEmail, default: '' },
     nickname: { name: { NL: "Bijnaam", EN: "Nick name" }, type: "text", check: checkName, default: '' },
@@ -804,8 +805,12 @@ function onload() {
       withCredentials: true
     }
   }).done(function(data) {
-    initData(); for (var k in FORMS) initForm(k); initLanguage()
-    prefillUser(data)
+    if (data && data.id) {
+      initData(); for (var k in FORMS) initForm(k); initLanguage()
+      prefillUser(data)
+    } else {
+      getElem('forms').innerHTML = '<a href="https://www.ligfiets.net/user/login"><span class="EN">Login to your ligfiets.net account</span><span class="NL">Log eerst in bij ligfiets.net</span></a><span class="EN"> first, or </span><span class="NL">, of </span><a href="https://www.ligfiets.net/user/register"><span class="EN">create an account</span><span class="NL">maak een account aan</span></a>, <span class="EN">then refresh this page</span><span class="NL">ververs daarna deze pagina</span>.'
+    }
   }).fail(function(msg) {
     console.log('Failure to query ligfiets.net')
     initData(); for (var k in FORMS) initForm(k); initLanguage()
@@ -816,16 +821,15 @@ function onload() {
 <body onload="onload()">
 <!-- start page--><div id="page">
 <img src="cvheader2017blauw.png" style="width: 1146px; height:150px"/>
-<!-- start forms--><div id="forms">
+<!-- start main--><div id="main">
 <p>Choose your language / Kies uw taal</p>
 <div class="lang"><input type="button" value="ENGLISH" onclick="selectLanguage('EN')">&nbsp;<input type="button" value="NEDERLANDS" onclick="selectLanguage('NL')"></div>
 <p><span class="EN">Welcome to the <b>CycleVision registration module</b>. It allows you to
-register multiple riders with multiple bikes.<br/>If you are not participating in any races, you can also use the <a href="http://www.ligfiets.net/event/3771/cycle-vision.html">simple form at Ligfiets.net</a>.
-<br/>Make sure you are logged in to your <a href="https://www.ligfiets.net/user/login" "target="_blank">Ligfiets.net account</a> before you continue.
+register multiple riders with multiple bikes.<br/>If you are not participating in any races, you can also use the <a href="http://www.ligfiets.net/event/3771/cycle-vision.html">simple form at Ligfiets.net</a>.</span><span class="NL">Welkom bij de <b>CycleVision registratie module</b>. Hiermee kun je meerdere rijders met verschillende fietsen inschrijven voor de races.<br/>Als je geen races rijdt kun je ook het <a href="http://www.ligfiets.net/event/3771/cycle-vision.html">simpele Ligfiets.net formulier</a> gebruiken.</span>
+<!-- start forms--><div id="forms"><span class="EN">Make sure you are logged in to your <a href="https://www.ligfiets.net/user/login" "target="_blank">Ligfiets.net account</a> before you continue.
 <br/>Fill out the forms below, 
 click [Done] at the bottom, and you will be taken back to the Ligfiets.net
-registration page where you can confirm and pay.</span><span class="NL">Welkom bij de <b>CycleVision registratie module</b>. Hiermee kun je meerdere rijders met verschillende fietsen inschrijven voor de races.<br/>Als je geen races rijdt kun je ook het <a href="http://www.ligfiets.net/event/3771/cycle-vision.html">simpele Ligfiets.net formulier</a> gebruiken.
-<br/>Zorg dat je ingelogd bent op <a href="https://www.ligfiets.net/user/login" "target="_blank">Ligfiets.net</a> voordat je verder gaat.
+registration page where you can confirm and pay.</span><span class="NL">Zorg dat je ingelogd bent op <a href="https://www.ligfiets.net/user/login" "target="_blank">Ligfiets.net</a> voordat je verder gaat.
 <br/>Vul de formulieren hieronder in, druk daarna helemaal onderaan op [Gereed], en je wordt teruggeleid naar de Ligfiets.net inschrijfpagina waar je kunt bevestigen en betalen.</span>
 </p>
 <h2>Camping</h2>
@@ -855,7 +859,7 @@ yourself.</span><span class="NL">Vul voor iedere rijder die je aanmeldt de gegev
 <div id="bike-form">
 </div>
 
-<h3><span class="EN">Race components</span><span class="NL">Wedstrijdonderdelen</span></h3>
+<h3><span class="EN">Race disciplines</span><span class="NL">Wedstrijdonderdelen</span></h3>
 <span class="EN">Enter for each race which rider+bike combinations will participate. In case of a tandem, also enter the stoker+bike combination.</span><span class="NL">Vul voor elke race de deelnemende rijder+fiets combinaties in. Voeg in geval van een tandem ook de stoker+fiets combinatie toe.</span>
 <h3><span class="EN">1 hour time trial (Saturday)</span><span class="NL">1 uurs tijdrit (Zaterdag 9:00 buiten)</span></h3>
 <div id="onehour-list">
@@ -919,5 +923,6 @@ yourself.</span><span class="NL">Vul voor iedere rijder die je aanmeldt de gegev
 </p>
 
 <!-- end forms--></div>
+<!-- end main--></div>
 <!-- end page--></div>
 </body></html>
