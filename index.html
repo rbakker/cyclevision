@@ -22,6 +22,7 @@ table.add { border: 1px solid blue; background: #f0faff; margin: 1ex; padding: 1
 div.error { background: #fff; color: #800; font-weight: bold; display: block }
 div.id { text-align: center; background: #eee; padding: 1ex; border-radius: 1ex; border: 1px solid black}
 </style>
+<script type="text/javascript" src="jquery.min.js"></script>
 <script type="text/javascript">
 "use strict"
 
@@ -32,9 +33,12 @@ var FORMS = {
     firstName: { name: { NL: "Voornaam", EN: "First name" }, type: "text", check: checkName },
     lastName: { name: { NL: "Achternaam", EN: "Last name" }, type: "text", check: checkName },
     gender: { name: { NL: "Geslacht", EN: "Gender" }, type: "radio", check: checkRadio, options: genderOptions },
+    city: { name: { NL: "Woonplaats, land", EN: "City, country of residence" }, type: "radio", check: checkRadio, options: genderOptions },
     birthDate: { name: { NL: "Geboortedatum", EN: "Date of birth" }, type: "date", check: checkBirth },
     email: { name: { NL: "Email adres", EN: "Email address" }, type: "text", check: checkEmail, default: '' },
     nickname: { name: { NL: "Bijnaam", EN: "Nick name" }, type: "text", check: checkName, default: '' },
+    ligfietsnet: { name: { NL: "Ligfiets.net ID", EN: "Ligfiets.net ID" }, type: "text", check: checkLigfietsnet, default: '' },
+    about: { name: { NL: "Over jezelf (voor pers)", EN: "About yourself (for press)" }, type: "textarea", check: checkName, default: '' },
   },
   bike: {
     name: { name: { NL: "Koosnaam", EN: "Given name" }, type: "text", check: checkName, default: '' },
@@ -171,6 +175,8 @@ function checkName(val,itemKey,id) {
   toggleError(itemKey+'-'+id,val && val.length>=2 ? '' : 'Error: enter a valid '+name+'.')
   return val
 }
+
+var checkLigfietsnet = checkName
 
 function checkRadio(val,itemKey,id) {
   toggleError(itemKey+'-'+id,val !== undefined ? '' : 'Error: select a value.')
@@ -370,6 +376,7 @@ function count(h) { var n=0; for (var k in h) if (h.hasOwnProperty(k)) n++; retu
 function getValue(field) {
   if (field.tagName.toLowerCase() == 'input') {
     if (field.type == 'text') return field.value
+    if (field.type == 'textarea') return field.value
     if (field.type == 'date') return field.value
     if (field.type == 'radio') {
       var radios = document.getElementsByName(field.id);
@@ -383,6 +390,7 @@ function getValue(field) {
 function setValue(field,value) {
   if (field.tagName.toLowerCase() == 'input') {
     if (field.type == 'text') field.value = value
+    if (field.type == 'textarea') return field.value
     if (field.type == 'date') field.value = value
     if (field.type == 'radio') {
       var radios = document.getElementsByName(field.id);
@@ -438,6 +446,7 @@ function initForm(itemKey) {
     a.push('<tr><td colspan="4"><div id="'+itemKey+'-'+k+'-error" class="error"/></td></tr>')
     a.push('<tr><td class="key"><span class="EN">'+f.name.EN+'</span><span class="NL">'+f.name.NL+'</span></td><td class="price">'+(f.price ? '&euro; '+f.price.toFixed(2) : '')+'</td><td class="colon">:</td><td class="value">')
     if (f.type == 'text') a.push('<input id="'+itemKey+'-'+k+'" type="text" value=""/>')
+    if (f.type == 'textarea') a.push('<textarea id="'+itemKey+'-'+k+'" rows="3" value=""></textarea>')
     if (f.type == 'date') a.push('<input id="'+itemKey+'-'+k+'" type="date" value=""/>')
     if (f.type == 'select') {
       a.push('<select id="'+itemKey+'-'+k+'"'+(complex ? 'onchange="updateForm(\''+itemKey+'\')"' : 'onchange="simpleChange(\''+itemKey+'\',\''+k+'\')"')+'>')
@@ -629,15 +638,7 @@ function selectLanguage(on) {
     insert.apply(styleSheet,['span.NL { display: inline }',0])
     insert.apply(styleSheet,['span.EN {display: none }',0])
   }  
-console.log(styleSheet)
-/*
-  var off = (on == 'NL' ? 'EN' : 'NL')
-  var elems = document.getElementsByClassName(off)
-  for (var i=0; i<elems.length; i++) elems[i].style.display='none'
-  var elems = document.getElementsByClassName(on)
-  for (var i=0; i<elems.length; i++) elems[i].style.display='inline'
   setCookie('LANG',JSON.stringify(on))
-*/
 }
 
 function getPrice(itemKey,keys) {
@@ -787,9 +788,32 @@ function summarize() {
   getElem('summary').innerHTML = a.join('')
 }
 
+function prefillUser(data) {
+  if (!DATA.rider || !DATA.rider.length) {
+    getElem('rider-email').value = data.email
+    getElem('rider-nickname').value = data.username
+    getElem('rider-ligfietsnet').value = data.id
+  }
+}
+
+function onload() {
+  $.ajax({
+    url: 'https://www.ligfiets.net/userinfo',
+    method: 'GET',
+    xhrFields: {
+      withCredentials: true
+    }
+  }).done(function(data) {
+    initData(); for (var k in FORMS) initForm(k); initLanguage()
+    prefillUser(data)
+  }).fail(function(msg) {
+    console.log('Failure to query ligfiets.net')
+    initData(); for (var k in FORMS) initForm(k); initLanguage()
+  })
+}
 </script>
 </head>
-<body onload="initData(); for (var k in FORMS) initForm(k); initLanguage()">
+<body onload="onload()">
 <!-- start page--><div id="page">
 <img src="cvheader2017blauw.png" style="width: 1146px; height:150px"/>
 <!-- start forms--><div id="forms">
