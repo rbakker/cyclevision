@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html>
 <!-- TODO 
-language via global style
-include meals
-calculate costs
 improve summary with option values instead of keys
 -->
 
@@ -36,7 +33,7 @@ var FORMS = {
     lastName: { name: { NL: "Achternaam", EN: "Last name" }, type: "text", check: checkName },
     gender: { name: { NL: "Geslacht", EN: "Gender" }, type: "radio", check: checkRadio, options: genderOptions },
     birthDate: { name: { NL: "Geboortedatum", EN: "Date of birth" }, type: "date", check: checkBirth },
-    email: { name: { NL: "Email adres", EN: "Email address" }, type: "text", check: checkEmail, default: '(optional)' },
+    email: { name: { NL: "Email adres", EN: "Email address" }, type: "text", check: checkEmail, default: '' },
     nickname: { name: { NL: "Bijnaam", EN: "Nick name" }, type: "text", check: checkName, default: '' },
   },
   bike: {
@@ -77,7 +74,7 @@ var FORMS = {
     _day: 2,
     rider: { name: { NL: "Rijder", EN: "Rider" }, type: "select", check: checkSelect, options: riderOptions },
     bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions },
-    duration: { name: { NL: "Duur", EN: "Duration" }, type: "radio", check: checkSelect, options: durationOptions }
+    duration: { name: { NL: "Duur", EN: "Duration" }, type: "radio", check: checkRadio, options: durationOptions }
   },
   camping: {
     _simple_: true,
@@ -88,10 +85,10 @@ var FORMS = {
   },
   meal: {
     _simple_: true,
-    mealPlan: { name: { NL: "Alle maaltijden pakket", EN: "All meals package" }, price: 27.50, type: "select", options: countOptions },
-    mealFri: { name: { NL: "Maaltijd vrijdagavond", EN: "Meal Friday evening" }, price: 10, type: "select", options: countOptions },
+    mealFri: { name: { NL: "Chinese maaltijd vrijdagavond", EN: "Meal (Chinese) Friday evening" }, price: 10, type: "select", options: countOptions },
+    mealPlan: { name: { NL: "Maaltijden Zaterdag/Zondag (2x ontbijt, 1x diner)", EN: "Meals Saturday/Sunday (2x breakfast, 1x dinner)" }, price: 27.50, type: "select", options: countOptions },
     breakfastSat: { name: { NL: "Ontbijt zaterdagochtend", EN: "Breakfast Saturday morning" }, price: 6.50, type: "select", options: countOptions },
-    mealSat: { name: { NL: "Maaltijd zaterdagavond", EN: "Meal Saturday evening" }, price: 17.50, type: "select", options: countOptions },
+    mealSat: { name: { NL: "Diner zaterdagavond", EN: "Dinner Saturday evening" }, price: 17.50, type: "select", options: countOptions },
     breakfastSun: { name: { NL: "Ontbijt zondagochtend", EN: "Breakfast Sunday morning" }, price: 6.50, type: "select", options: countOptions }
   }
 }
@@ -113,28 +110,28 @@ var LANG = {
     EN: ['bike','bikes']
   },
   onehour: {
-    NL: ['rijder+fiets','rijders+fietsen voor de 1-uurs race'],
-    EN: ['rider+bike','riders+bikes for the 1 hour race']
+    NL: ['deelnemer','rijders+fietsen voor de 1-uurs race'],
+    EN: ['entry','riders+bikes for the 1 hour race']
   },
   indoor1lap: {
-    NL: ['rijder+fiets','rijders+fietsen voor de snelste ronde in het velodrome'],
-    EN: ['rider+bike','riders+bikes for the fastest lap indoor']
+    NL: ['deelnemer','rijders+fietsen voor de snelste ronde in het velodrome'],
+    EN: ['entry','riders+bikes for the fastest lap indoor']
   },
   outdoor1lap: {
-    NL: ['rijder+fiets','rijders+fietsen voor de snelste ronde op de buitenbaan'],
-    EN: ['rider+bike','riders+bikes for the fastest lap outdoor circuit']
+    NL: ['deelnemer','rijders+fietsen voor de snelste ronde op de buitenbaan'],
+    EN: ['entry','riders+bikes for the fastest lap outdoor circuit']
   },
   singletrack: {
-    NL: ['rijder+fiets','rijders+fietsen voor het tweewieler criterium'],
-    EN: ['rider+bike','riders+bikes for the single track race']
+    NL: ['deelnemer','rijders+fietsen voor het tweewieler criterium'],
+    EN: ['entry','riders+bikes for the single track race']
   },
   multitrack: {
-    NL: ['rijder+fiets','rijders+fietsen voor het multi-track criterium'],
-    EN: ['rider+bike','riders+bikes for the multi track race']
+    NL: ['deelnemer','rijders+fietsen voor het multi-track criterium'],
+    EN: ['entry','riders+bikes for the multi track race']
   },
   threehour: {
-    NL: ['rijder+fiets','rijders+fietsen voor de gecombineerde 3/6 uurs race'],
-    EN: ['rider+bike','riders+bikes for the combined 3/6 hour race']
+    NL: ['deelnemer','rijders+fietsen voor de gecombineerde 3/6 uurs race'],
+    EN: ['entry','riders+bikes for the combined 3/6 hour race']
   },
   camping: {
     NL: ['camping','camping'],
@@ -668,6 +665,8 @@ function summaryItem() {
 
 function summarize() {
   var a = []
+  var amount = 0
+  // form values to be submitted
   getElem('submit-comment').value = JSON.stringify(DATA)
 
   // CAMPING
@@ -676,8 +675,10 @@ function summarize() {
   var fields = FORMS['camping']
   // summary
   var price = getPrice('camping',['adultFri','childFri'])
+  amount += price
   a.push(summaryItem( {NL:'Op vrijdag kampeer je met ',EN:'On Friday, you camp with '}, values.adultFri || 0, {NL:' volwassenen en ',EN:' adults and '}, values.childFri || 0, {NL:' kinderen. Dit kost &euro; ', EN:' children. This costs &euro; '}, price.toFixed(2)+'.' ))
   price = getPrice('camping',['adultSat','childSat'])
+  amount += price
   a.push(summaryItem(
     {NL:'Op zaterdag kampeer je met ',EN:'On Saturday, you camp with '},
     values.adultSat || 0,
@@ -689,7 +690,7 @@ function summarize() {
   // form values to be submitted
   for (var k in values) {
     var elem = getElem('submit-camping-'+k)
-    if (elem) elem.value = values[k]
+    if (elem) elem.value = (Number(values[k]) || '')
   }
   
   // MEALS
@@ -698,13 +699,15 @@ function summarize() {
   fields = FORMS['meal']
   // summary
   price = getPrice('meal',['mealPlan'])
+  amount += price
   a.push(summaryItem(
     {EN:'You are ordering ',NL:'Je bestelt '},
     values.mealPlan || 0,
-    {EN:' meal-plans. This costs &euro; ',NL:' maaltijd-arrangementen. Dit kost &euro; '},
+    {EN:' meal-plans (breakfast Sat/Sun, dinner Sat). This costs &euro; ',NL:' maaltijd-arrangementen (ontbijt za/zo, diner za). Dit kost &euro; '},
     price.toFixed(2)+'.'
   ))  
   price = getPrice('meal',['mealFri','breakfastSat','mealSat','breakfastSun'])
+  amount += price
   a.push(summaryItem( 
     {EN:'In addition, you order ',NL:'Daarnaast bestel je '}, 
     values.mealFri || 0, 
@@ -720,7 +723,7 @@ function summarize() {
   // form values to be submitted
   for (var k in values) {
     var elem = getElem('submit-meal-'+k)
-    if (elem) elem.value = values[k]
+    if (elem) elem.value = (Number(values[k]) || '')
   }
 
   // RACES
@@ -761,6 +764,7 @@ function summarize() {
     if (numSat && numSun) { numTwoDays++; price = HIDDEN.race.twoDays.price }
     else if (numSat) { numSatOnly++; price = HIDDEN.race.oneDay.price }
     else if (numSun) { numSunOnly++; price = HIDDEN.race.oneDay.price }
+    amount += price
     a.push(summaryItem(
       {EN:'Rider ',NL:'Rijder '},
       r,
@@ -770,7 +774,8 @@ function summarize() {
       price+'.'
     ))
   }  
-  a.push('</ul>')
+  a.push('</ul><b><span class="EN">Total</span><span class="NL">Totaal</span></b><ul>')
+  a.push(summaryItem({EN:'The total amount of your order is &euro; ',NL:'Het totaalbedrag van uw bestelling is &euro; '},amount+'.'))
   // form values to be submitted
   var elem = getElem('submit-race-satSun')
   if (elem) elem.value = (numTwoDays || '')
@@ -826,40 +831,40 @@ yourself.</span><span class="NL">Vul voor iedere rijder die je aanmeldt de gegev
 <div id="bike-form">
 </div>
 
-<h3><span class="EN">Race components</span><span class="NL">Wedstrijd onderdelen</span></h3>
+<h3><span class="EN">Race components</span><span class="NL">Wedstrijdonderdelen</span></h3>
 <span class="EN">Enter for each race which rider+bike combinations will participate. In case of a tandem, also enter the stoker+bike combination.</span><span class="NL">Vul voor elke race de deelnemende rijder+fiets combinaties in. Voeg in geval van een tandem ook de stoker+fiets combinatie toe.</span>
-<h3><span class="EN">1 hour time trial (Saturday)</span><span class="NL">1 uurs tijdrit (Zaterdag)</span></h3>
+<h3><span class="EN">1 hour time trial (Saturday)</span><span class="NL">1 uurs tijdrit (Zaterdag 9:00 buiten)</span></h3>
 <div id="onehour-list">
 </div>
 <div id="onehour-form">
 </div>
 
-<h3><span class="EN">Fastest lap indoor (Saturday)</span><span class="NL">Snelste ronde velodrome (Zaterdag)</span></h3>
+<h3><span class="EN">Fastest lap flying start (200m) indoor (Saturday)</span><span class="NL">Snelste vliegende start (200m) velodrome (Zaterdag 13:00 binnen)</span></h3>
 <div id="indoor1lap-list">
 </div>
 <div id="indoor1lap-form">
 </div>
 
-<h3><span class="EN">Criterium for single-track bikes (Saturday)</span><span class="NL">Criterium voor tweewielers (Zaterdag)</span></h3>
+<h3><span class="EN">Criterium for single-track bikes (Saturday 19:00 outdoor)</span><span class="NL">Criterium voor tweewielers (Zaterdag 19:00 buiten)</span></h3>
 <div id="singletrack-list">
 </div>
 <div id="singletrack-form">
 </div>
 
-<h3><span class="EN">Criterium for multi-track bikes (Saturday)</span><span class="NL">Criterium voor drie/vierwielers (Zaterdag)</span></h3>
+<h3><span class="EN">Criterium for multi-track bikes (Saturday 21:00 outdoor)</span><span class="NL">Criterium voor drie/vierwielers (Zaterdag  21:00 buiten)</span></h3>
 <div id="multitrack-list">
 </div>
 <div id="multitrack-form">
 </div>
 
-<h3><span class="EN">Fastest lap outdoor (Sunday)</span><span class="NL">Snelste ronde buiten (Zondag)</span></h3>
+<h3><span class="EN">Fastest lap outdoor (Sunday 20:30 outdoor)</span><span class="NL">Snelste ronde buiten (Zondag 20:30 buiten)</span></h3>
 <div id="outdoor1lap-list">
 </div>
 <div id="outdoor1lap-form">
 </div>
 
-<h3><span class="EN">Combined 3 and 6 hour race (Sunday)</span><span class="NL">Gecombineerde 3/6 uurs race (Zondag)</span></h3>
-<span class="EN">Note: the 6 hour race will only proceed with 10 or more participants.</span><span class="EN">Let op: de 6 uursrace gaat alleen door als er tenmminste 10 deelnemers zijn.</span>
+<h3><span class="EN">Combined 3 and 6 hour race (Sunday)</span><span class="NL">Gecombineerde 3/6 uurs race (Zondag 10:00 buiten)</span></h3>
+<span class="EN">Note: the 6 hour race will only proceed with 10 or more participants.</span><span class="NL">Let op: de 6 uursrace gaat alleen door als er tenmminste 10 deelnemers zijn.</span>
 <div id="threehour-list">
 </div>
 <div id="threehour-form">
@@ -868,7 +873,6 @@ yourself.</span><span class="NL">Vul voor iedere rijder die je aanmeldt de gegev
 <!--h2><span class="EN">Confirm and pay</span><span class="NL">Bevestig en betaal</span></h2-->
 
 <h2><span class="EN">Order summary and payment</span><span class="NL">Besteloverzicht en betaling</span></h2>
-Under construction / Wordt aan gewerkt
 <div id="summary"></div>
 
 <form action="https://www.ligfiets.net/create/event/registration?id=3771" method="post">
@@ -876,8 +880,8 @@ Under construction / Wordt aan gewerkt
   <input type="hidden" id="submit-camping-childFri" name="stuffs[stuff_631]"/>
   <input type="hidden" id="submit-camping-adultSat" name="stuffs[stuff_632]"/>
   <input type="hidden" id="submit-camping-childSat" name="stuffs[stuff_633]"/>
-  <input type="hidden" id="submit-meal-mealPlan" name="stuffs[stuff_634]"/>
-  <input type="hidden" id="submit-meal-mealFri" name="stuffs[stuff_635]"/>
+  <input type="hidden" id="submit-meal-mealFri" name="stuffs[stuff_634]"/>
+  <input type="hidden" id="submit-meal-mealPlan" name="stuffs[stuff_635]"/>
   <input type="hidden" id="submit-meal-breakfastSat" name="stuffs[stuff_636]"/>
   <input type="hidden" id="submit-meal-mealSat" name="stuffs[stuff_637]"/>
   <input type="hidden" id="submit-meal-breakfastSun" name="stuffs[stuff_638]"/>
