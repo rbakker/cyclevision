@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/>
+<script type="text/javascript" src="jquery.min.js"></script>
+<script type="text/javascript" src="papaparse.min.js"></script>
+<script type="text/javascript">
+"use strict"
+
+function listParticipants(csv) {
+  var ans = Papa.parse(csv,{delimiter: ",",fastMode: false})
+  var data = ans.data
+  for (var i=0; i<data.length; i++) {
+    var row = data[i]
+    if (row.length>10) break
+  }
+  var header = data[i]
+  var i0 = i+1
+  var numCols = header.length
+  var html = []
+  html.push('<h2>Kamperen en Maaltijden</h2>')
+  html.push('<table>')
+  html.push('<tr>')
+  var commentCol = 0
+  for (var j=0; j<header.length; j++) {
+    if (header[j].toLowerCase() == 'opmerking') {
+      commentCol = j
+      break
+    }
+    html.push('<th>'+header[j]+'</th>')
+  }
+  html.push('</tr>')
+  for (i=i0; i<data.length; i++) {
+    var row = data[i]
+    html.push('<tr>')
+    for (var j=0; j<commentCol; j++) html.push('<td>'+(row[j] || '')+'</td>')
+    html.push('</tr>')
+  }
+  html.push('</table>')
+  
+  html.push('<h2>Wedstrijdlijst</h2>')
+  for (i=i0; i<data.length; i++) {
+    var row = data[i]
+    var comment = row[commentCol]
+    if (comment) comment = JSON.parse(comment)
+    html.push('<pre>'+JSON.stringify(comment,null,2)+'</pre>')
+  }
+
+  $("#participants").html(html.join(''))
+}
+
+function onload() {
+  $.ajax({
+//    url: 'https://www.ligfiets.net/event/downloadregistrations/3771/cyclevision-test.html',
+    url: 'Cycle-Vision-Inschrijvingen-2017.csv',
+    method: 'GET',
+    xhrFields: {
+      withCredentials: true
+    }
+  }).done(function(data) {
+    console.log('ok')
+    listParticipants(data)
+  }).fail(function(msg) {
+    console.log('Failure to query ligfiets.net')
+  })
+}
+
+</script>
+</head><body onload="onload()">
+<div id="participants"></div>
+</body></html>
