@@ -3,17 +3,18 @@
 <head><meta charset="utf-8"/>
 <script type="text/javascript" src="jquery.min.js"></script>
 <script type="text/javascript" src="papaparse.min.js"></script>
+<script type="text/javascript" src="forms.js"></script>
 <script type="text/javascript">
 "use strict"
 
 function listParticipants(csv) {
   var ans = Papa.parse(csv,{delimiter: ",",fastMode: false})
-  var data = ans.data
-  for (var i=0; i<data.length; i++) {
-    var row = data[i]
+  var list = ans.data
+  for (var i=0; i<list.length; i++) {
+    var row = list[i]
     if (row.length>10) break
   }
-  var header = data[i]
+  var header = list[i]
   var i0 = i+1
   var numCols = header.length
   var html = []
@@ -29,8 +30,8 @@ function listParticipants(csv) {
     html.push('<th>'+header[j]+'</th>')
   }
   html.push('</tr>')
-  for (i=i0; i<data.length; i++) {
-    var row = data[i]
+  for (i=i0; i<list.length; i++) {
+    var row = list[i]
     html.push('<tr>')
     for (var j=0; j<commentCol; j++) html.push('<td>'+(row[j] || '')+'</td>')
     html.push('</tr>')
@@ -38,13 +39,39 @@ function listParticipants(csv) {
   html.push('</table>')
   
   html.push('<h2>Wedstrijdlijst</h2>')
-  for (i=i0; i<data.length; i++) {
-    var row = data[i]
-    var comment = row[commentCol]
-    if (comment) comment = JSON.parse(comment)
-    html.push('<pre>'+JSON.stringify(comment,null,2)+'</pre>')
+  var races = {}
+  for (var formKey in FORMS) {
+    var form = FORMS[formKey]
+    if (form.day) races[formKey] = []
   }
-
+  for (i=i0; i<list.length; i++) {
+    var row = list[i]
+    var data = row[commentCol]
+    if (!data) continue
+    DATA = JSON.parse(data)
+    for (var r in races) {
+      var values = DATA[r]
+      if (values) {
+        for (var k in values) {
+          if (values[k]) races[r].push({
+            rider: DATA.rider[values[k].rider],
+            bike: DATA.bike[values[k].bike]
+          })
+        }
+      }
+    }
+    html.push('<pre>'+JSON.stringify(DATA,null,2)+'</pre>')
+  }
+  for (var r in races) {
+    var values = races[r]
+    html.push('<h3>'+r+'</h3>')
+    html.push('<table>')
+    var cols = {
+      riderFirstName: FORMS.bike
+    }
+    for (var k in values) html.push('<tr><td>'+JSON.stringify(values[k])+'</td></tr>')
+    html.push('</table>')
+  }
   $("#participants").html(html.join(''))
 }
 
