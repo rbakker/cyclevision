@@ -496,7 +496,7 @@ function prefillUser(data) {
   }
 }
 
-function onload() {
+function onloadUserinfo() {
   $.ajax({
     url: 'https://www.ligfiets.net/userinfo',
     method: 'GET',
@@ -521,7 +521,8 @@ function onload() {
 }
 </script>
 </head>
-<body onload="onload()">
+<body>
+<iframe height="1" width="1" src="https://www.ligfiets.net/userinfo" onload="onloadUserinfo()"></iframe>
 <!-- start page--><div id="page">
 <img src="cvheader2017blauw.png" style="width: 1146px; height:150px"/>
 <!-- start main--><div id="main">
