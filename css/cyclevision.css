@@ -33,7 +33,7 @@ body.cyclevision #menu ul li {
 body.cyclevision #main {
 	float: right;
 	margin: 8px 16px 8px 8px;
-	width: 634px;
+	//width: 634px;
 	//background-color: #9c9544;
 	background-color: white;
 	//border: 1px solid gray;
@@ -41,22 +41,22 @@ body.cyclevision #main {
 
 body.cyclevision #sidebar {
 	margin: 8px 8px 8px 16px;
-	width: 274px;
+	//width: 274px;
 	/*background-color: #9c9544;*/
 	background-color: white;
 	//border: 1px solid gray;
 }
 
 body.cyclevision .side_content {
-	width: 236px;
+	//width: 236px;
 }
 
 body.cyclevision .main_content {
-	width: 596px;
+	//width: 596px;
 }
 
 body.cyclevision #main h1 {
-	color: #312783; /* Paars #7c0d87; */
+	//color: #312783; /* Paars #7c0d87; */
 }
 
 body.cyclevision #main p a,
