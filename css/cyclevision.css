@@ -34,9 +34,9 @@ body.cyclevision #main {
 	float: right;
 	margin: 8px 16px 8px 8px;
 	width: 634px;
-	/*background-color: #9c9544;*/
+	//background-color: #9c9544;
 	background-color: white;
-	border: 1px solid gray;
+	//border: 1px solid gray;
 }
 
 body.cyclevision #sidebar {
