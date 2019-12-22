@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/>
+<script type="text/javascript" src="jquery.min.js"></script>
+<script type="text/javascript" src="papaparse.min.js"></script>
+<script type="text/javascript" src="forms.js"></script>
+<script type="text/javascript" src="FileSaver.min.js"></script>
+<script type="text/javascript">
+"use strict"
+
+var RIBI_COLS
+var RIBI_DATA
+
+function csvWrite(columns,csvFile,keyName) {
+  var fields = Object.keys(columns)
+  var firstColumn = columns[fields[0]]
+  var table = []
+  if (Array.isArray(firstColumn)) {
+    for (var i=0; i<firstColumn.length; i++) {
+      var row = []
+      for (var k in columns) {
+        var value = columns[k][i]
+        if (typeof value == 'object') {
+          value = JSON.stringify(value).replace(/"/g,'')
+          value = String(value).substr(1,value.length-2)
+        }
+        row.push(value)
+      }
+      table.push(row)    
+    }
+  } else {
+    if (keyName) fields.unshift(keyName)
+    for (var i in firstColumn) {
+      var row = keyName ? [i] : []
+      for (var k in columns) {
+        var value = columns[k][i]
+        if (typeof value == 'object') {
+          value = JSON.stringify(value).replace(/"/g,'')
+          value = String(value).substr(1,value.length-2)
+        }
+        row.push(value)
+      }
+      table.push(row)    
+    }
+  }
+  var csv = Papa.unparse({
+	  fields: fields,
+	  data: table,
+	},{ quotes: true })
+  if (csvFile) {
+    var blob = new Blob([csv], {type:'text/csv'})
+    saveAs(blob,csvFile)
+  }
+  return csv
+}
+
+function csvWriteRows(rows,csvFile) {
+  var csv = Papa.unparse(rows,{ quotes: true })
+  if (csvFile) {
+    var blob = new Blob([csv], {type:'text/csv'})
+    saveAs(blob,csvFile)
+  }
+  return csv
+}
+  
+function fairingCode(bike) {
+  var tc = ''
+  if (bike.fairing == 'full') return 'FF'
+  if (bike.fairing == 'front' || bike.fairing == 'rear' || bike.fairing == 'tail') return 'PF'
+  if (bike.fairing == 'none') return 'UF'
+  return '??'
+}
+
+function raceCode(race,values,bike) {
+  if (race == 'onehour') return 'A'
+  if (race == 'indoor1lap') return 'B'
+  if (race == 'criterium' && values.which == 'semifaired') return 'C'
+  if (race == 'criterium' && values.which == 'open') return 'D'
+  if (race == 'criterium' && bike.fairing !== 'full') return 'C'
+  if (race == 'criterium' && bike.fairing == 'full') return 'D'
+  if (race == 'outdoor1lap') return 'E'
+  if (race == 'threehour' && values.duration == 3) return 'F'
+  if (race == 'threehour' && values.duration == 6) return 'G'
+  return '?'
+}
+
+function assertObject(obj,member) {
+  if (!obj[member]) obj[member] = {}
+  return obj[member]
+}
+
+function assertArray(obj,member) {
+  if (!obj[member]) obj[member] = []
+  return obj[member]
+}
+
+function parseData(csv) {
+  var ans = Papa.parse(csv,{delimiter: ",",fastMode: false})
+  RIBI_COLS = ans.data.shift()
+  RIBI_DATA = ans.data
+}
+
+function displayJson(output,errors) {
+  $("#errors").html('<pre>'+JSON.stringify(errors,null,2).replace(/</g,'&lt;').replace(/&/g, "&amp;")+'</pre>')
+  $("#output").html('<pre>'+JSON.stringify(output,null,2).replace(/</g,'&lt;').replace(/&/g, "&amp;")+'</pre>')
+}
+
+function rawData() {
+  displayJson(RIBI_DATA,[])
+}
+
+function startList(race,toniFormat) {
+  var startEnd = {
+    '1-hour':['9:00:00',60],
+    '200m fly':['13:15:00',180],
+    'crit PF':['18:30:00',0],
+    'crit FF':['19:00:00',0],
+    '2.5 km':['9:00:00',30],
+    '3-hour':['10:00:00',0],
+    '6-hour':['10:00:00',0]
+  }
+  var raceCol = RIBI_COLS.indexOf(race)
+  var bikeCol = RIBI_COLS.indexOf('bike')
+  var presentCol = RIBI_COLS.indexOf('present')
+  var speedCol = RIBI_COLS.indexOf('speed_'+race)
+  var cols = ['first name','last name','number','transponder','lfid','gender','jr/sr','code']
+  var col2i = {}
+  for (var i=0; i<cols.length; i++) col2i[cols[i]] = RIBI_COLS.indexOf(cols[i])  
+  if (speedCol>-1) {
+    cols.push('sort')
+    col2i['sort'] = speedCol
+  }
+  var rows = []
+  for (var i=0; i<RIBI_DATA.length; i++) {
+    var row = RIBI_DATA[i]
+    var present = row[presentCol]
+    if (row[raceCol] && present != 'cancel') {
+      var reduced = []
+      if (toniFormat) {
+        //Wedstrijd nummer, Voornaam, Achternaam, Transponder nummer, Plaza Id, Klasse code (zie onder), Fietsnaam
+        var number = row[col2i['number']].replace(/[{}]/g,'')
+        reduced.push(number)
+        reduced.push(row[col2i['first name']])
+        reduced.push(row[col2i['last name']])
+        var transponder = row[col2i['transponder']].substr(1)
+        reduced.push(transponder)
+        reduced.push(row[col2i['lfid']])
+
+        // now apply the TONI magick
+        var code = 0
+
+        // rider properties
+        if (row[col2i['gender']] == 'F') code += 0x0001 // $klasse_vrouw = 0x0001;
+        if (row[col2i['jr/sr']] == '12-') code += 0x0002 // $klasse_kind = 0x0002;
+        if (row[col2i['jr/sr']] == 'jr') code += 0x0004 // $klasse_junior = 0x0004;
+        if (row[col2i['jr/sr']] == '40+') code += 0x0008 // $klasse_veteraan = 0x0008;
+        if (row[col2i['jr/sr']] == 'sr') code += 0x0010 // $klasse_oudere = 0x0010;
+
+        // bike properties
+        var bikeCode = row[col2i['code']].split('-')
+        var fairingCode = bikeCode[0]
+        if (fairingCode == 'UF') code += 0x0100 // $klasse_ongestroomlijnd = 0x0100;
+        if (fairingCode == 'PF') code += 0x0200 // $klasse_staartpuntje = 0x0200;
+        var bikeAttrs = bikeCode[1] || ''
+        if (bikeAttrs.indexOf('M')>-1) code += 0x0400 // $klasse_multitrack = 0x0400;
+        if (bikeAttrs.indexOf('T')>-1) code += 0x0800 // $klasse_meerpersoons = 0x0800;
+        if (bikeAttrs.indexOf('H')>-1) code += 0x1000 // $klasse_handbike = 0x1000;
+        if (bikeAttrs.indexOf('R')>-1) code += 0x2000 // $klasse_roeifiets = 0x2000;
+        reduced.push(code) // for TESTING, use code.toString(16) to see hex values
+
+        reduced.push(row[bikeCol].replace(/[^a-zA-Z0-9\.\- ]/g,'_'))
+      } else {
+        for (var k in col2i) {
+          reduced.push(row[col2i[k]])
+        }
+      }
+      rows.push(reduced)
+    }
+  }
+  if (!toniFormat) {
+    if (speedCol>-1) {
+      var sortCol = cols.indexOf('sort')
+      rows.sort(function(a,b) { var v = a[sortCol]; var w=b[sortCol]; return v>w ? 1 : (v == w ? 0 : -1) })
+    } else {
+      var sortCol = cols.indexOf('last name')
+      rows.sort(function(a,b) { var v = a[sortCol]; var w=b[sortCol]; return v>w ? 1 : (v == w ? 0 : -1) })
+    }
+    if (startEnd[race]) {
+      cols.unshift('time')
+      var hm = startEnd[race][0].split(':')
+      var h = Number(hm[0])
+      var m = Number(hm[1])
+      var s = Number(hm[2])
+      var ds = startEnd[race][1]
+      for (var i=0; i<rows.length; i++) {
+        rows[i].unshift(''+h+':'+m+':'+s)
+        s += ds
+        var dm = Math.floor(s/60)
+        s -= dm*60
+        m += dm
+        if (m>=60) { h+=1; m-=60 }
+      }
+    }
+    rows.unshift(cols)
+  }
+  displayJson(rows,[])
+  csvWriteRows(rows,'startlist_'+race+(toniFormat ? '_TONI':'')+'.csv')
+}
+
+function raceNumbers(csvFile) {
+  var races = {}
+  for (var formKey in FORMS) {
+    var form = FORMS[formKey]
+    if (form.day) races[formKey] = []
+  }  
+  var riders = {}
+  var raceNumber = 1
+  for (var lfid in DATA_BY_LFID) {    
+    var DATA = DATA_BY_LFID[lfid]
+    for (var race in races) {
+      if (DATA[race]) {
+        for (var k in DATA[race]) {
+          if (DATA[race][k] !== null) {
+            var d = DATA[race][k].rider
+            var rider = DATA.rider[d]
+            var riderName = rider.firstName+' '+rider.lastName //+' ('+rider.ligfietsnet+')'
+            if (!riders[riderName]) {
+              riders[riderName] = raceNumber
+              raceNumber++
+            }
+            //assertArray(rider,'_races').push(race)
+          }
+        }
+      }
+    }
+  }
+  displayJson(riders,[])
+  csvWrite({'wedstrijdnummer':riders},csvFile,'name')
+}
+
+function mealCount(csvFile) {
+  var meal2field = {
+    'mealFri':10,
+    'mealFriVeg':18,
+    'mealPlan':11,
+    'mealPlanVeg':19,
+    'breakfastSat':12,
+    'breakfastSatVeg':20,
+    'mealSat':13,
+    'mealSatVeg':21,
+    'breakfastSun':14,
+    'breakfastSunVeg':22
+  }
+  var errors = []
+  var mealCount = {
+    total: {},
+    people: {}
+  }
+  for (var k in meal2field) {
+    mealCount.total[k] = 0
+    mealCount.people[k] = []
+  }
+  for (var lfid in DATA_BY_LFID) {
+    var DATA = DATA_BY_LFID[lfid]
+    var row = DATA.__row__
+    var meals = DATA.meal || {}
+    for (k in meal2field) { 
+      if (meals[k] == undefined) {
+        meals[k] = row && Number(row[meal2field[k]])  
+      } else if (row && Number(row[meal2field[k]]) != meals[k]) {
+        errors.push('Meals specified in comment-data does not match submitted value for user '+row[1]+' ('+row[3]+')')
+      }
+    }
+    var fullName = (row && row[3]) || DATA._userInfo.profile.fullname
+    for (k in meals) {
+      var nm = meals[k]
+      if (nm) {
+        mealCount.total[k] += Number(nm)
+        mealCount.people[k].push(fullName+'('+nm+')')
+      }
+    }
+  }
+  displayJson(mealCount,errors)
+  csvWrite(mealCount,csvFile,'meal')
+}
+
+function listForGerard(csvFile) {
+  var races = {}
+  for (var formKey in FORMS) {
+    var form = FORMS[formKey]
+    if (form.day) races[formKey] = []
+  }  
+  var riders = {
+    'nummer':{},
+    'races':{},
+    'bikes':{},
+    'gender':{},
+    'lfid':{}
+  }
+  var raceNumber = 1
+  for (var lfid in DATA_BY_LFID) {    
+    var DATA = DATA_BY_LFID[lfid]
+    for (var race in races) {
+      if (DATA[race]) {
+        for (var k in DATA[race]) {
+          if (DATA[race][k] !== null) {
+            var values = DATA[race][k]
+            var d = values.rider
+            var rider = DATA.rider[d]
+            var riderName = rider.firstName+' '+rider.lastName //+' ('+rider.ligfietsnet+')'
+            var b = values.bike
+            var bike = DATA.bike[b]
+            if (!riders.nummer[riderName]) {
+              riders.nummer[riderName] = raceNumber
+              riders.races[riderName] = raceCode(race,values,bike)
+              assertArray(riders.bikes,riderName).push( fairingCode(bike) )
+              riders.gender[riderName] = (rider.gender === 'male' ? 'M' : rider.gender == 'female' ? 'F' : '?')
+              riders.lfid[riderName] = (rider.ligfietsnet)
+              raceNumber++
+            } else {
+              riders.races[riderName] += raceCode(race,values,bike)
+              var fc = riders.bikes[riderName].indexOf(fairingCode(bike))
+              if (fc==-1) {
+                riders.bikes[riderName].push(fairingCode(bike))
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  displayJson(riders,[])
+  csvWrite(riders,csvFile,'name')
+}
+
+function masterTable(csvFile,forWeb) {
+  var errors = []
+  var raceNames = {
+    'A':'1-hour',
+    'B':'200m fly',
+    'C':'crit PF',
+    'D':'crit FF',
+    'E':'2.5 km',
+    'F':'3-hour',
+    'G':'6-hour'
+  }
+  var races = {}
+  for (var formKey in FORMS) {
+    var form = FORMS[formKey]
+    if (form.day) races[formKey] = []
+  }  
+  var rider2number = {}
+  var riderBikes = {}
+  var riders = {
+    'first name':{},
+    'last name':{},
+    'number':{},
+    'transponder':{},
+    'lfid':{},
+    'gender':{},
+    'age':{},
+    'jr/sr':{},
+    'present':{}
+  }
+  for (var r in raceNames) {
+    riders[raceNames[r]] = {}
+  }
+  riders['code'] = {}
+  riders['bike'] = {}
+  riders['about bike'] = {}
+  riders['about me'] = {}
+  riders['BeND'] = {}
+  riders['birth date'] = {}
+  riders['email'] = {}
+  var raceNumber = 1
+  for (var lfid in DATA_BY_LFID) {    
+    var DATA = DATA_BY_LFID[lfid]
+    for (var race in races) {
+      if (DATA[race]) {
+        for (var k in DATA[race]) {
+          if (DATA[race][k] !== null) {
+            var values = DATA[race][k]
+            var d = values.rider
+            var rider = DATA.rider[d]
+            var riderName = rider.firstName+' '+rider.lastName
+            var b = values.bike
+            var bike = DATA.bike[b]
+            var fc = fairingCode(bike)
+            var bikeName = bike.name+' '+bike.make
+            var bikeCode = ''
+            if (bike.track == 'multi') bikeCode += 'M'
+            if (bike.tandem == 'yes') {
+              if (bike.make.indexOf('RAR')>-1) bikeCode += 'T'
+              else console.log('Not a tandem',bike) // due to a bug, many bikes are registered as tandems
+            }
+            if (bike.drive == 'rowing') bikeCode += 'R'
+            if (bike.drive == 'hand') bikeCode += 'H'
+            var nr = rider2number[riderName]
+            if (!nr) {
+              nr = rider2number[riderName] = raceNumber            
+              raceNumber++
+            }
+            var rider_bike = riderName+'|'+bikeName
+            if (!riders[rider_bike]) {
+              assertArray(riderBikes,riderName)
+              var bikePos = riderBikes[riderName].indexOf(bikeName)
+              if (bikePos<0) {
+                riderBikes[riderName].push(bikeName)
+                bikePos = riderBikes[riderName].indexOf(bikeName)
+              }
+              riders['first name'][rider_bike] = rider.firstName
+              riders['last name'][rider_bike] = rider.lastName
+              riders.transponder[rider_bike] = '#'+nr
+              for (var i=0; i<bikePos; i++) nr += '*' 
+              riders.number[rider_bike] = '{'+nr+'}'
+              riders['gender'][rider_bike] = (rider.gender === 'male' ? 'M' : rider.gender == 'female' ? 'F' : '?')
+              riders.lfid[rider_bike] = (rider.ligfietsnet)
+              var ymd = rider.birthDate.split('-')
+              if (ymd.length != 3) errors.push('Invalid birthDate '+rider.birthDate+' for rider '+riderName)
+              var riderAge = Math.floor(2017+6/100+24/10000 - (Number(ymd[0])+Number(ymd[1])/100+Number(ymd[2]/10000)))
+              riders['age'][rider_bike] = (forWeb ? '***' : riderAge)
+              riders['present'][rider_bike] = (DATA._cancel ? 'cancel' : '')
+              if (riderAge <= 16) riders['jr/sr'][rider_bike] = 'jr'
+              if (riderAge >= 55) riders['jr/sr'][rider_bike] = 'sr'
+              riders['code'][rider_bike] = fc+(bikeCode ? '-'+bikeCode : '')
+              riders['bike'][rider_bike] = bikeName
+              riders['about bike'][rider_bike] = bike.about
+              riders['about me'][rider_bike] = rider.about
+              riders['BeND'][rider_bike] = rider.bend
+              riders['birth date'][rider_bike] = (forWeb ? '***' : rider.birthDate)
+              riders['email'][rider_bike] = (forWeb ? '***' : rider.email)
+            }
+            var rc = raceCode(race,values,bike)
+            var raceName = raceNames[rc]
+            riders[raceName][rider_bike] = 'x' //fc+(bikeCode ? '-'+bikeCode : '')
+          }
+        }
+      }
+    }
+  }
+  displayJson(riders,errors)
+  csvWrite(riders,csvFile)
+}
+
+function allParticipants() {
+  var errors = []
+  var byRider = {}
+  var races = {}
+  for (var formKey in FORMS) {
+    var form = FORMS[formKey]
+    if (form.day) races[formKey] = []
+  }
+  for (var lfid in DATA_BY_LFID) {
+    DATA = DATA_BY_LFID[lfid]
+    var anyRace = false
+    for (var r in races) {
+      var values = DATA[r]
+      if (values) {
+        anyRace = true
+        for (var k in values) {
+          var value = values[k]
+          if (value) {
+            var rider = DATA.rider[values[k].rider]
+            var bike = DATA.bike[values[k].bike]
+            var riderName = rider.firstName+' '+rider.lastName
+            var riderData = assertObject(byRider,riderName)
+            assertArray(riderData,'races').push(r)
+            assertArray(riderData,'raceCode').push(raceCode(r,value,bike))
+            var ymd = rider.birthDate.split('-')
+            if (ymd.length != 3) errors.push('Invalid birthDate '+rider.birthDate+' for rider '+riderName)
+            var riderAge = Math.floor(2017+6/100+24/10000 - (Number(ymd[0])+Number(ymd[1])/100+Number(ymd[2]/10000)))
+            riderData.birthDate = rider.birthDate
+            riderData.age = riderAge
+            riderData.riderCode = ( riderAge >= 55 ? 'sr' : (riderAge<17 ? 'jr' : '') )+( rider.gender=='male' ? 'M' : (rider.gender=='female' ? 'F' : '?') )
+          }
+        }
+      }
+    }
+    var row = DATA['__row__']
+    if (row) {
+      var isRacing = row[15] || row[16] || row[17]
+      if (isRacing && !anyRace) errors.push('User '+lfid+' ('+row[3]+') is racing but not participating in any race.')
+    }
+  }
+  displayJson(byRider,errors)
+}
+
+function showButtons() {
+  var races = {}
+  for (var formKey in FORMS) {
+    var form = FORMS[formKey]
+    if (form.day) races[formKey] = []
+  }
+  var html = []
+  html.push(
+    '<input type="button" value="Ruwe data" onclick="rawData()"><br/>',
+    '<input type="button" value="Racenumbers" onclick="startList(\'number\')"><br/>'
+  )
+  var i0 = RIBI_COLS.indexOf('1-hour')
+  var i1 = RIBI_COLS.indexOf('6-hour')
+  for (var i=i0; i<=i1; i++) {
+    html.push('<input type="button" value="Start list '+RIBI_COLS[i]+'" onclick="startList(\''+RIBI_COLS[i]+'\')">&nbsp;&nbsp;<input type="button" value="Start list '+RIBI_COLS[i]+' (TONI)" onclick="startList(\''+RIBI_COLS[i]+'\',true)"><br/>')
+  }
+  $("#buttons").html(html.join(''))
+}
+
+function onload() {
+  $.ajaxSetup({
+    // Disable caching of AJAX responses
+    cache: false
+  })
+  $.get(
+    './docs/inschrijflijst.csv'
+  ).done(function(data) {
+    parseData(data)
+    console.log('data ok')
+    showButtons()
+/*    $.ajax({
+      url: 'mutations.json',
+      method: 'GET'
+    }).done(function(mutations) {
+      console.log('mutations ok')
+      DATA_BY_LFID = parseData(data,mutations)
+      showButtons()
+    }).fail(function(msg) {
+      console.log('Failure to load mutations.')
+    })*/
+  }).fail(function(msg) {
+    console.log('Failure to load data.')
+  })
+}
+
+</script>
+</head><body onload="onload()">
+<div id="buttons"></div>
+<div id="errors" style="color: #D00"></div>
+<div id="output"></div>
+</body></html>

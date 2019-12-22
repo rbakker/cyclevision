@@ -1,0 +1,127 @@
+<html>
+<head>
+<style type="text/css">
+/* span.NL and span.EN must be the AT THE TOP */
+span.NL { display: none }
+span.EN { display: inline }
+
+body { background: #ddd; margin: 0; padding: 0; width: 100%; height: 100%; }
+div#page { max-width: 1146px; margin: 0em auto; border-left: 1px solid #aaa; border-right: 1px solid #aaa; background: #fff; min-height: 101%; }
+div#main { padding: 1% }
+</style>
+<script type="text/javascript">
+function initLanguage() {
+  try {
+    var on = JSON.parse(getCookie('LANG'))
+  } catch(e) {
+    on = 'EN'
+  }
+  selectLanguage(on)
+}
+
+function setCookie(key,value) {
+  document.cookie = key + "=" + value;
+}
+function getCookie(key) {
+  var parts = decodeURIComponent(document.cookie).split(';');
+  for(var i=0; i<parts.length; i++) {
+    var c = parts[i].trim()
+    if (c.indexOf(key+'=') == 0) {
+      return c.substr(key.length+1);
+    }
+  }
+  return "";
+}
+
+function selectLanguage(on) {
+  var styleSheet = document.styleSheets[0]
+  var rules = styleSheet.cssRules;
+  var remove = styleSheet.deleteRule || styleSheet.removeRule
+  remove.apply(styleSheet,[rules[0]])
+  remove.apply(styleSheet,[rules[1]])
+  var insert = styleSheet.insertRule || styleSheet.addRule
+  if (on == 'EN') {
+    insert.apply(styleSheet,['span.NL { display: none }',0])
+    insert.apply(styleSheet,['span.EN { display: inline }',0])
+  } else {
+    insert.apply(styleSheet,['span.NL { display: inline }',0])
+    insert.apply(styleSheet,['span.EN {display: none }',0])
+  }  
+  setCookie('LANG',JSON.stringify(on))
+}
+</script>
+</head>
+<body onload="initLanguage()">
+<!-- start page--><div id="page">
+<img src="cvheader2017blauw.png" style="width: 1146px; height:150px"/>
+<!-- start main--><div id="main">
+<p>Choose your language / Kies je taal</p>
+<div class="lang"><input type="button" value="ENGLISH" onclick="selectLanguage('EN')">&nbsp;<input type="button" value="NEDERLANDS" onclick="selectLanguage('NL')"></div>
+<h2><span class="EN">CycleVision scores and prizes</span><span class="NL">CycleVision scores en prijzen</span></h2>
+<h3><span class="EN">Abbreviations</span><span class="NL">Afkortingen</span></h3>
+<div>UF <span class="EN">unfaired</span><span class="NL">ongestroomlijnd</span></div>
+<div>PF <span class="EN">partly faired</span><span class="NL">halfgestroomlijnd</span></div>
+<div>FF <span class="EN">fully faired</span><span class="NL">volgestroomlijnd</span></div>
+<div>X <span class="EN">open class in which ALL participate automatically</span><span class="NL">vrije klasse waar iedereen automatisch aan meedoet</span>.</div>
+<p>
+<h3><span class="EN">OVERALL winner of CycleVision</span><span class="NL">Winnaar CycleVision EINDKLASSEMENT</span></h3>
+<span class="EN">For each individual race, finishers 1 to 15 collect the following number of points, respectively</span><span class="NL">Per wedstrijdonderdeel worden punten verzameld. De snelste nummers 1 t/m 15 krijgen respectievelijk het volgende aantal punten</span>:
+<br/>25, 20, 16, 13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
+<br/><span class="EN">Participants may use different bikes in different races</span><span class="NL">Deelnemers mogen per onderdeel een ander type fiets inzetten</span>.
+<p>
+<span class="EN">The total number of points is calculated with the following formula</span><span class="NL">Het totaal aantal punten wordt met de volgende formule berekend</span>:
+<br/><span class="EN">Total score</span><span class="NL">Eindscore</span> = A + B + (1x C <span class="EN">or</span><span class="NL">of</span> 1x D) + E + (1x F <span class="EN">or</span><span class="NL">of</span> 1.5x G)
+<br/><span class="EN">whereby A - G refer to points collected for the individual races listed below</span><span class="NL">waarbij A t/m G verwijzen naar de punten verzameld bij onderstaande wedstrijdonderdelen</span>.
+<p>
+<span class="EN">For the overall ranking, there are prizes for:</span><span class="NL">In het eindklassement worden prijzen uitgereikt voor:</span>
+<br/>&nbsp;&nbsp;<span class="EN">fastest male</span><span class="NL">snelste man</span>: 1,2,3
+<br/>&nbsp;&nbsp;<span class="EN">fastest female</span><span class="NL">snelste vrouw</span>: 1,2,3
+<br/>&nbsp;&nbsp;<span class="EN">fastest unfaired (UF)</span><span class="NL">snelste ongestroomlijnde (UF)</span>: 1,2,3
+<br/>&nbsp;&nbsp;<span class="EN">fastest partially faired (PF)</span><span class="NL">snelste gedeeltelijk gestroomlijnde (PF)</span>: 1,2,3
+<br/>&nbsp;&nbsp;<span class="EN">fastest junior 16 and below</span><span class="NL">snelste junior 16 jaar en jonger</span>: 1
+<br/>&nbsp;&nbsp;<span class="EN">fastest senior 55 and up</span><span class="NL">snelste senior 55 jaar en ouder</span>: 1
+</p><p>
+
+<span class="EN">For the individual races, we considered using the same scheme as for the overall ranking, but this would cause the number of prizes to be more than twice the number of participants. We reduced this number by only awarding winners (not 2nd and 3rd).</span>
+<span class="NL">Voor de afzonderlijke races wilden we eerst hetzelfde schema aanhouden, maar daarmee zou het aantal prijzen meer dan twee keer het aantal deelnemers worden. Daarom krijgt per categorie alleen de nummer 1 een prijs.</span>
+
+<h3><span class="EN">Winners and points for individual races</span><span class="NL">Winnaars en punten per wedstrijdonderdeel</span></h3>
+<b>A. <span class="EN">1 hour race</span><span class="NL">Eenuursrace</span></b>
+<br/><span class="EN">points collected in</span><span class="NL">Punten verzameld in</span>: UF <span class="EN">or</span><span class="NL">of</span> PF <span class="EN">and/or</span><span class="NL">en/of</span> X <span class="EN">class</span><span class="NL">klasse</span>
+<br/><span class="EN">Prizes for</span><span class="NL">Prijzen voor</span>:
+<br/>&nbsp;&nbsp;<span class="EN">fastest male, fastest female, fastest UF, fastest PF</span><span class="NL">snelste man, snelste vrouw, snelste UF, snelste PF</span>
+</p><p>
+<b>B. <span class="EN">indoor 200m sprint</span><span class="NL">binnenbaan 200m sprint</span></b>
+<br/><span class="EN">points collected in</span><span class="NL">Punten verzameld in</span>: UF <span class="EN">or</span><span class="NL">of</span> PF <span class="EN">and/or</span><span class="NL">en/of</span> X <span class="EN">class</span><span class="NL">klasse</span>
+<br/><span class="EN">Prizes for</span><span class="NL">Prijzen voor</span>:
+<br/>&nbsp;&nbsp;<span class="EN">fastest male, fastest female, fastest UF, fastest PF</span><span class="NL">snelste man, snelste vrouw, snelste UF, snelste PF</span>
+</p><p>
+<b>C. Criterium UF/PF</b>
+<br/><span class="EN">points collected in</span><span class="NL">Punten verzameld in</span>: UF <span class="EN">or</span><span class="NL">of</span> PF <span class="EN">and</span><span class="NL">en</span> X <span class="EN">class</span><span class="NL">klasse</span>
+<br/><span class="EN">Prizes for</span><span class="NL">Prijzen voor</span>
+<br/>&nbsp;&nbsp;<span class="EN">fastest UF, fastest PF</span><span class="NL">snelste UF, snelste PF</span>
+</p><p>
+<b>D. Criterium FF</b>
+<br/><span class="EN">points collected in</span><span class="NL">Punten verzameld in</span>: X <span class="EN">class</span><span class="NL">klasse</span>
+<br/><span class="EN">Prizes for</span><span class="NL">Prijzen voor</span>:
+<br/>&nbsp;&nbsp;<span class="EN">fastest male, fastest female</span><span class="NL">snelste man, snelste vrouw</span>
+</p><p>
+<b>E. <span class="EN">Fastest lap outdoor 2.5km</span><span class="NL">Snelste ronde buitenbaan 2.5km</span></b>
+<br/><span class="EN">points collected in</span><span class="NL">Punten verzameld in</span>: UF <span class="EN">or</span><span class="NL">of</span> PF <span class="EN">and/or</span><span class="NL">en/of</span> X <span class="EN">class</span><span class="NL">klasse</span>
+<br/><span class="EN">Prizes for</span><span class="NL">Prijzen voor</span>:
+<br/>&nbsp;&nbsp;<span class="EN">fastest male, fastest female, fastest UF, fastest PF</span><span class="NL">snelste man, snelste vrouw, snelste UF, snelste PF</span>
+</p><p>
+<b>F. <span class="EN">3 hour race</span><span class="NL">Drieuursrace</span></b>
+<br/><span class="EN">points collected in</span><span class="NL">Punten verzameld in</span>: UF <span class="EN">or</span><span class="NL">of</span> PF <span class="EN">and/or</span><span class="NL">en/of</span> X <span class="EN">class</span><span class="NL">klasse</span>
+<br/><span class="EN">Prizes for</span><span class="NL">Prijzen voor</span>:
+<br/>&nbsp;&nbsp;<span class="EN">fastest male, fastest female, fastest UF, fastest PF</span><span class="NL">snelste man, snelste vrouw, snelste UF, snelste PF</span>
+</p><p>
+<b>G. <span class="EN">6 hour race</span><span class="NL">Zesuursrace</span></b>
+<br/><span class="EN">points MULTIPLIED BY 1.5 collected in</span><span class="NL">Punten VERMENIGVULDIGD MET 1,5 verzameld in</span>: UF <span class="EN">or</span><span class="NL">of</span> PF <span class="EN">and/or</span><span class="NL">en/of</span> X <span class="EN">class</span><span class="NL">klasse</span>
+<br/><span class="EN">Prizes for</span><span class="NL">Prijzen voor</span>:
+<br/>&nbsp;&nbsp;<span class="EN">fastest male, fastest female, fastest UF, fastest PF</span><span class="NL">snelste man, snelste vrouw, snelste UF, snelste PF</span>
+</p>
+<!-- end main--></div>
+<!-- end page--></div>
+</body>
+</html>

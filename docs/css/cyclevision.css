@@ -1,0 +1,106 @@
+/*
+EEEC8F Achtergrond geel R238, G236, B143 of C10, Y55.  
+007FBE Letters blauw R0, G117, B190 of C100, M40. 
+312783 Paars R49, G39, B131 of C100, M100. 
+009640 Groen R0, G150, B64 of C100, Y100. 
+EB5C2E Oranje R235, G92, B46 of M75, Y85.  
+CB8815  Pupilbruin R203, G136, B21 of C23, M50, Y100.
+21BBEF  Pupilblauw R33, G187, B239 of C70. 
+*/
+
+body.cyclevision {
+	background-color: #CB8815; /* Pupilbruin */ /* #9c9544; */
+}
+
+body.cyclevision #content {
+	background-color: #EEEC8F; /* Achtergrond geel */ /*#d4da56; */
+}
+
+body.cyclevision #crumbtrail
+{
+	background-color: green; /* #9c9544; */
+}
+
+body.cyclevision #header {
+	background: url(/img/cyclevision/CycleVision2013trfiets2.png), no-repeat scroll right top black;
+}
+
+body.cyclevision #menu ul li {
+	float: right;
+}
+
+body.cyclevision #main {
+	float: right;
+	margin: 8px 16px 8px 8px;
+	width: 634px;
+	/*background-color: #9c9544;*/
+	background-color: white;
+	border: 1px solid gray;
+}
+
+body.cyclevision #sidebar {
+	margin: 8px 8px 8px 16px;
+	width: 274px;
+	/*background-color: #9c9544;*/
+	background-color: white;
+	border: 1px solid gray;
+}
+
+body.cyclevision .side_content {
+	width: 236px;
+}
+
+body.cyclevision .main_content {
+	width: 596px;
+}
+
+body.cyclevision #main h1 {
+	color: #312783; /* Paars #7c0d87; */
+}
+
+body.cyclevision #main p a,
+body.cyclevision #main li a
+{
+	color: #007FBE /* Letters blauw */ /* #009a32; */
+}
+
+body.cyclevision div.submenu ul li.current ul li,
+body.cyclevision div.submenu ul li.current ul li a {
+	color: inherit;
+}
+
+
+body.cyclevision div.submenu ul li.current a, 
+body.cyclevision div.submenu h3 a.current {
+	color: #EB5C2E; /* Oranje *//* #96006b; */
+}
+
+body.cyclevision #logo {
+	width: 940px;
+	position: absolute;
+}
+body.cyclevision #logo a img {
+	float: right;
+}
+
+body.cyclevision #logo img {
+	float: left;
+}
+
+body.cyclevision #header_right {
+	margin-top: 70px;
+	/*top: 100px;*/
+}
+
+body.cyclevision .side_content {
+	border-top: 1px solid gray;
+}
+
+body.cyclevision .side_content.submenu {
+	border-top: none;
+}
+
+body.cyclevision span.translate {
+	margin-top: 3px;
+	margin-left: 8px;
+}

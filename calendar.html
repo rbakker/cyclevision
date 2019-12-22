@@ -1,0 +1,89 @@
+<html>
+<head>
+<style type="text/css">
+/* span.NL and span.EN must be the AT THE TOP */
+span.NL { display: none }
+span.EN { display: inline }
+
+body { background: #ddd; margin: 0; padding: 0; width: 100%; height: 100%; }
+div#page { max-width: 1146px; margin: 0em auto; border-left: 1px solid #aaa; border-right: 1px solid #aaa; background: #fff; min-height: 101%; }
+div#main { padding: 1% }
+</style>
+<script src="jquery.min.js"></script>
+<script src="format-google-calendar.js"></script>
+<script type="text/javascript">
+
+function initLanguage() {
+  try {
+    var on = JSON.parse(getCookie('LANG'))
+  } catch(e) {
+    on = 'EN'
+  }
+  selectLanguage(on)
+}
+
+function setCookie(key,value) {
+  document.cookie = key + "=" + value;
+}
+function getCookie(key) {
+  var parts = decodeURIComponent(document.cookie).split(';');
+  for(var i=0; i<parts.length; i++) {
+    var c = parts[i].trim()
+    if (c.indexOf(key+'=') == 0) {
+      return c.substr(key.length+1);
+    }
+  }
+  return "";
+}
+
+function selectLanguage(on) {
+  var styleSheet = document.styleSheets[0]
+  var rules = styleSheet.cssRules;
+  var remove = styleSheet.deleteRule || styleSheet.removeRule
+  remove.apply(styleSheet,[rules[0]])
+  remove.apply(styleSheet,[rules[1]])
+  var insert = styleSheet.insertRule || styleSheet.addRule
+  if (on == 'EN') {
+    insert.apply(styleSheet,['span.NL { display: none }',0])
+    insert.apply(styleSheet,['span.EN { display: inline }',0])
+  } else {
+    insert.apply(styleSheet,['span.NL { display: inline }',0])
+    insert.apply(styleSheet,['span.EN {display: none }',0])
+  }  
+  setCookie('LANG',JSON.stringify(on))
+}
+
+function onload() {
+  formatGoogleCalendar.init({
+    calendarUrl: 'https://www.googleapis.com/calendar/v3/calendars/s3ago0fng2lgqa7c9bll7ufa2g%40group.calendar.google.com/events?key=AIzaSyBaoqAYom_btIyajUQYPJn7w91Vle75mrA',
+    past: false,
+    upcoming: true,
+    sameDayTimes: true,
+    dayNames: true,
+    pastTopN: -1,
+    upcomingTopN: 3,
+    recurringEvents: true, 
+    itemsTagName: 'li',
+    upcomingSelector: '#events-upcoming',
+    pastSelector: '#events-past',
+    upcomingHeading: '<h2>Upcoming events</h2>',
+    pastHeading: '<h2>Past events</h2>',
+    format: ['*date*', ': ', '*summary*', ' — ', '*description*', ' in ', '*location*']
+  });
+}
+</script>
+</head>
+<body onload="initLanguage(); onload()">
+<!-- start page--><div id="page">
+<img src="cvheader2017blauw.png" style="width: 1146px; height:150px"/>
+<!-- start main--><div id="main">
+
+<ul id="events-upcoming">
+</ul>
+<ul id="events-past">
+</ul>
+
+<!-- end main--></div>
+<!-- end page--></div>
+</body>
+</html>

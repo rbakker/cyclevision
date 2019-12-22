@@ -1,0 +1,492 @@
+{
+  "10976": {
+    "rider": {
+      "0":{"firstName":"leonard","lastName":"Flendrig","gender":"male","city":"Amsterdam","country":"nl","birthDate":"1965-03-04","email":"leonard.flendrig@unilever.com","nickname":"leonardf","ligfietsnet":"10976","bend":"no","about":""}
+    }, 
+    "bike": {
+      "0":{"name":"","standard":"other","make":"M5 low-racer","track":"multi","tandem":"no","fairing":"tail","drive":"pedal","about":"fiets uit het jaar 2000"}
+    },
+    "onehour": {
+      "0":{"rider":"0","bike":"0","speed":"~47"}
+    },
+    "_userInfo": {
+      "id": "10976",
+      "username": "LeonardF",
+      "email": "leonard.flendrig@unilever.com",
+      "profile": {
+        "birthdate": "04-03-1965",
+        "fullname": "Leonard Flendrig",
+        "city": "Amsterdam"
+      }
+    }
+  },
+  "10866":{
+    "rider":{
+      "0":{"firstName":"Maarten","lastName":"Sijbrandij","gender":"male","city":"Dronten","country":"nl","birthDate":"2004-09-09","email":"info@intercitybike.nl","nickname":"maarten","ligfietsnet":"10866","bend":"yes","about":""}
+    },
+    "bike":{
+      "0":{"name":"","standard":"df","make":"InterCityBike DF","track":"multi","tandem":"no","fairing":"full","drive":"pedal","about":""}
+    },
+    "onehour":{
+      "0":{"rider":"0","bike":"0","speed":"~36"}
+    },
+    "indoor1lap":{
+      "0":{"rider":"0","bike":"0","speed":"~40"}
+    },
+    "criterium":{
+      "0":{"rider":"0","bike":"0"}
+    },
+    "outdoor1lap":{
+      "0":{"rider":"0","bike":"0","speed":"~40"}
+    },
+    "threehour":{
+      "0":{
+        "rider":"0","bike":"0","duration":"3"
+      }
+    },
+    "general":{ "comment": "Maarten Sijbrandij, M, geb 9-9-2004  rijdt alle wedstrijden in DF gestroomlijnde 3 wieler, 3 uurs race" },
+    "_userInfo": {
+      "id":"10866",
+      "username": "maarten",
+      "profile": {
+        "fullname": "Maarten Sijbrandij"
+      }
+    }
+  },
+  "7969": {
+    "rider":{
+      "0":{"firstName":"Pieter","lastName":"Sijbrandij","gender":"male","city":"Dronten","country":"nl","birthDate":"2002-10-26","email":"info@intercitybike.nl","nickname":"pieterman","ligfietsnet":"7969","bend":"yes","about":""}
+    },
+    "bike":{
+      "0":{"name":"","standard":"df","make":"InterCityBike DF","track":"multi","tandem":"no","fairing":"full","drive":"pedal","about":""}
+    },
+    "onehour":{
+      "0":{"rider":"0","bike":"0","speed":"~40"}
+    },
+    "indoor1lap":{
+      "0":{"rider":"0","bike":"0","speed":"~45"}
+    },
+    "criterium":{
+      "0":{"rider":"0","bike":"0"}
+    },
+    "outdoor1lap":{
+      "0":{"rider":"0","bike":"0","speed":"~45"}
+    },
+    "threehour":{
+      "0":{
+        "rider":"0","bike":"0","duration":"3"
+      }
+    },
+    "general":{ "comment": "Pieter Sijbrandij M geboren 26-10-23002, rijdt alle wedstrijden in DF gestroomlijnde 3 wieler, 3 uurs race" },
+    "_userInfo": {
+      "id":"7969",
+      "username": "pieterman",
+      "profile": {
+        "fullname": "Pieter Sijbrandij"
+      }
+    }
+  },
+  "10865": {
+    "rider":{
+      "0":{"firstName":"Anna","lastName":"Sijbrandij","gender":"female","city":"Dronten","country":"nl","birthDate":"2006-11-08","email":"info@intercitybike.nl","nickname":"annasijbrandij","ligfietsnet":"10865","bend":"yes","about":""}
+    },
+    "bike":{
+      "0":{"name":"","standard":"other","make":"Challenge Hurricane","track":"single","tandem":"no","fairing":"none","drive":"pedal","about":""}
+    },
+    "onehour":{
+      "0":{"rider":"0","bike":"0","speed":"~36"}
+    },
+    "indoor1lap":{
+      "0":{"rider":"0","bike":"0","speed":"~40"}
+    },
+    "criterium":{
+      "0":{"rider":"0","bike":"0"}
+    },
+    "outdoor1lap":{
+      "0":{"rider":"0","bike":"0","speed":"~40"}
+    },
+    "general":{ "comment": "Anna Sijbrandij V, 8-11-2006, rijdt alle wedstrijden om ongestroomlijnde challenge hurricane 2 wieler behalve de 3/6 uur race" },
+    "_userInfo": {
+      "id":"10865",
+      "username": "annasijbrandij",
+      "profile": {
+        "fullname": "Anna Sijbrandij"
+      }
+    }
+  },
+  "38203": {
+    "camping": {
+      "adultFri": "1",
+      "adultSat": "1"
+    },
+    "rider":{
+      "0":{"firstName":"Richard","lastName":"Schaffenroth","gender":"male","city":"??","country":"Germany","birthDate":"1972-16-04","email":"richard.schaffenroth@gmail.com","nickname":"dooxie","ligfietsnet":"38203","bend":"yes","about":""}
+    },
+    "bike":{
+      "0":{"name":"","standard":"other","make":"Go One Evo K","track":"multi","tandem":"no","fairing":"full","drive":"pedal","about":""}
+    },
+    "onehour":{
+      "0":{"rider":"0","bike":"0","speed":"~47"}
+    },
+    "indoor1lap":{
+      "0":{"rider":"0","bike":"0","speed":"~51"}
+    },
+    "criterium":{
+      "0":{"rider":"0","bike":"0"}
+    },
+    "outdoor1lap":{
+      "0":{"rider":"0","bike":"0","speed":"~51"}
+    },
+    "threehour":{
+      "0":{
+        "rider":"0","bike":"0","duration":"6"
+      }
+    },
+    "general":{ "comment": "Ingeschreven via mail naar cyclevision@gmail.com" },
+    "_userInfo": {
+      "id":"38203",
+      "username": "dooxie",
+      "email": "richard.schaffenroth@gmail.com",
+      "profile": {
+        "fullname": "Richard Schaffenroth"
+      }
+    }
+  },
+  "21735": {
+    "camping": {
+      "adultFri": "1",
+      "adultSat": "1"
+    },
+    "meal": {
+      "mealPlan": "1"
+    },
+    "rider":{
+      "0":{"firstName":"Jessica","lastName":"Miller","gender":"female","city":"Götzis","country":"Oostenrijk","birthDate":"1972-16-04","email":"werner.klomp@vol.at","nickname":"jessie","ligfietsnet":"21735","bend":"no","about":""}
+    },
+    "bike":{
+      "0":{"name":"","standard":"other","make":"Go One Evo K","track":"multi","tandem":"no","fairing":"full","drive":"pedal","about":""}
+    },
+    "onehour":{
+      "0":{"rider":"0","bike":"0","speed":"~40"}
+    },
+    "indoor1lap":{
+      "0":{"rider":"0","bike":"0","speed":"~47"}
+    },
+    "criterium":{
+      "0":{"rider":"0","bike":"0"}
+    },
+    "outdoor1lap":{
+      "0":{"rider":"0","bike":"0","speed":"~47"}
+    },
+    "threehour":{
+      "0":{
+        "rider":"0","bike":"0","duration":"3"
+      }
+    },
+    "general":{ "comment": "Ingeschreven via mail naar cyclevision@gmail.com" },
+    "_userInfo": {
+      "id":"21735",
+      "username": "jessie",
+      "email": "werner.klomp@vol.at",
+      "profile": {
+        "fullname": "Jessica Miller"
+      }
+    }
+  },
+  "10989": {
+    "_userInfo": {
+      "id":"10865",
+      "username": "danielduesentrieb1976",
+      "profile": {
+        "fullname": "Daniel Fenn"
+      }
+    }
+  },
+  "27404": {
+    "rider": {
+      "0": {
+        "firstName": "Ramsus",
+        "lastName": "Keller",
+        "gender": "male",
+        "city": "Amersfoort",
+        "country": "Nederland",
+        "birthDate": "1972-05-09",
+        "email": "ramsus72@yahoo.nl",
+        "nickname": "RamzoeFFF",
+        "ligfietsnet": "27404",
+        "bend": "no",
+        "about": ""
+      }
+    },
+    "bike": {
+      "0":{"name":"","standard":"other","make":"M5 CRL","track":"single","tandem":"no","fairing":"none","drive":"pedal","about":""}
+    },
+    "onehour": {
+      "0":{"rider":"0","bike":"0","speed":"~40"}
+    }
+  },
+  "9346": {
+    "rider": {
+      "0": {
+        "firstName": "Gerrit",
+        "lastName": "Liefers",
+        "gender": "male",
+        "city": "??",
+        "country": "Nederland",
+        "birthDate": "1970-01-01",
+        "email": "g-liefers@hotmail.com",
+        "nickname": "gerritliefers",
+        "ligfietsnet": "9346",
+        "bend": "no",
+        "about": ""
+      }
+    },
+    "bike": {
+      "0":{"name":"","standard":"other","make":"??","track":"single","tandem":"no","fairing":"none","drive":"pedal","about":""}
+    },
+    "threehour": {
+      "0":{"rider":"0","bike":"0","duration":"3"}
+    }
+  },
+  "26170": {
+    "bike": {
+      "0":{"name":"","standard":"other","make":"Evo KS","track":"multi","tandem":"no","fairing":"full","drive":"pedal","about":""}
+    },
+    "onehour":{
+      "0":{"rider":"0","bike":"0","speed":"~42"}
+    },
+    "indoor1lap":{
+      "0":{"rider":"0","bike":"0","speed":"~47"}
+    },
+    "criterium":{
+      "0":{"rider":"0","bike":"0"}
+    },
+    "outdoor1lap":{
+      "0":{"rider":"0","bike":"0","speed":"~47"}
+    },
+    "threehour":{
+      "0":{"rider":"0","bike":"0","duration":"3"}
+    }
+  },
+  "4516": {
+    "bike": {
+      "0":{"name":"","standard":"rowing","make":"roeifiets","track":"single","tandem":"no","fairing":"none","drive":"rowing","about":""}
+    },
+    "threehour":{
+      "0":{"rider":"0","bike":"0","duration":"3"}
+    }
+  },
+  "6044": {
+    "bike": {
+      "0":{"drive":"rowing"},
+      "1":{"drive":"rowing"}
+    }
+  },
+  "8742": {
+    "bike": {
+      "0":{"drive":"rowing"}
+    }
+  },
+  "28004": {
+    "bike": {
+      "0":{"drive":"rowing"}
+    }
+  },
+  "4228": {
+    "bike": {
+      "0":{"drive":"rowing"}
+    }
+  },
+  "4656": {
+    "rider": {
+      "0": {
+        "firstName": "Marc",
+        "lastName": "Peterse",
+        "gender": "male",
+        "city": "Tilburg",
+        "country": "Nederland",
+        "birthDate": "1965-10-13",
+        "email": "mhmmpeterse-c@telfort.nl",
+        "nickname": "MP",
+        "ligfietsnet": "4656",
+        "bend": "yes",
+        "about": ""
+      }
+    },
+    "bike": {
+      "0":{"name":"","standard":"other","make":"Optima Baron","track":"single","tandem":"no","fairing":"rear","drive":"pedal","about":""}
+    },
+    "threehour": {
+      "0":{"rider":"0","bike":"0","duration":"3"}
+    }
+  },
+  "753":{
+    "indoor1lap": {"0":{"rider":"0","bike":"0"}},
+    "criterium": {"0":{"rider":"0","bike":"0","which":"open"}},
+    "outdoor1lap": {"0":{"rider":"0","bike":"0"}}
+  },
+  "38181":{
+    "camping": {
+      "adultFri": "1",
+      "adultSat": "1"
+    },
+    "meal": {
+      "mealFri":"1",
+      "mealSat":"1"
+    },
+    "rider":{
+      "0":{"firstName":"Martin","lastName":"Bressler","gender":"male","city":"??","country":"DE","birthDate":"1970-01-01","email":"bikemaniac@web.de","nickname":"mbressler","ligfietsnet":"38181","bend":"no","about":""}
+    },
+    "bike":{
+      "0":{"name":"","standard":"df","make":"Cruzbike Vendetta","track":"single","tandem":"no","fairing":"none","drive":"pedal","about":""}
+    },
+    "onehour":{
+      "0":{"rider":"0","bike":"0","speed":"~42"}
+    },
+    "indoor1lap":{
+      "0":{"rider":"0","bike":"0","speed":"~47"}
+    },
+    "criterium":{
+      "0":{"rider":"0","bike":"0"}
+    },
+    "outdoor1lap":{
+      "0":{"rider":"0","bike":"0","speed":"~47"}
+    },
+    "threehour":{
+      "0":{
+        "rider":"0","bike":"0","duration":"3"
+      }
+    },
+    "_userInfo":{
+      "profile":{
+        "fullname":"Martin Bressler"
+      }
+    }
+  },
+  "548": {
+    "rider": { "0": { "firstName": "Hans", "lastName": "Wessels" } }
+  },
+  "1097": {
+    "rider": {
+      "0": {
+        "firstName": "Ellen",
+        "lastName": "van Vugt",
+        "gender": "male",
+        "city": "Nijmegen",
+        "country": "Nederland",
+        "birthDate": "1970-01-01",
+        "email": "ligfiets.net@c12h22o11.org",
+        "nickname": "Nyh",
+        "ligfietsnet": "1097",
+        "bend": "no",
+        "about": ""
+      }
+    },
+    "bike": {
+      "0": {
+        "name": "",
+        "standard": "other",
+        "make": "Jacobs RAR",
+        "track": "single",
+        "tandem": "yes",
+        "fairing": "none",
+        "drive": "pedal",
+        "about": ""
+      }
+    },
+    "onehour": {
+      "0": {
+        "rider": "0",
+        "bike": "0",
+        "speed": "~40"
+      }
+    },
+    "indoor1lap": {
+      "0": {
+        "rider": "0",
+        "bike": "0",
+        "speed": "~48"
+      }
+    },
+    "criterium": {
+      "0": {
+        "rider": "0",
+        "bike": "0",
+        "which": "semifaired"
+      }
+    },
+    "outdoor1lap": {
+      "0": {
+        "rider": "0",
+        "bike": "0",
+        "speed": "~48"
+      }
+    },
+    "threehour": {
+      "0": {
+        "rider": "0",
+        "bike": "0",
+        "duration": "6"
+      }
+    },
+    "camping": {},
+    "meal": {},
+    "general": {},
+    "_submitData": {
+      "submit-race-satSun": 1,
+      "submit-race-sat": "",
+      "submit-race-sun": ""
+    },
+    "_userInfo":{
+      "profile": {
+        "fullname": "Ellen van Vugt"
+      }
+    },
+    "_submitErrors": []
+  },
+  "3177": {
+    "rider": {
+      "1":{
+        "ligfietsnet":"20234"
+      },
+      "2":{
+        "ligfietsnet":"20260"
+      },
+      "3":{
+        "ligfietsnet":"6024"
+      }
+    }
+  },
+  "20172": {
+    "rider": {
+      "0":{
+        "ligfietsnet":"20172"
+      }
+    }
+  },
+  "x1": {
+    "comment": "Marco Loogman",
+    "meal": {
+      "mealPlan":"1"
+    },
+    "_userInfo":{
+      "profile": {
+        "fullname": "Marco Loogman"
+      }
+    }
+  },
+  "13811": {
+    "criterium":{
+      "0":{
+        "rider": "0",
+        "bike": "0"
+      }
+    }
+  },
+  "6018": {
+    "_cancel": true
+  }
+}
+
+
+
