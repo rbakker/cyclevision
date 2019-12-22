@@ -94,11 +94,11 @@ body.cyclevision #header_right {
 }
 
 body.cyclevision .side_content {
-	border-top: 1px solid gray;
+	//border-top: 1px solid gray;
 }
 
 body.cyclevision .side_content.submenu {
-	border-top: none;
+	//border-top: none;
 }
 
 body.cyclevision span.translate {
