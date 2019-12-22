@@ -10,6 +10,28 @@ improve summary with option values instead of keys
 span.NL { display: none }
 span.EN { display: inline }
 /* the rest can be in any position */
+.tt0 {
+  position: relative;
+  border-bottom: 1px dotted black;
+}
+.tt0 .tt1 {
+  visibility: hidden;
+  min-width: 40ex;
+  max-width: 60ex;
+  white-space: normal;
+  background-color: #ffa;
+  color: #000;
+  text-align: center;
+  padding: 1ex;
+  border: 1px solid #888;
+  bottom: 2em;
+  border-radius: 1ex;
+  position: absolute;
+  z-index: 1;
+}
+.tt0:hover .tt1 {
+  visibility: visible;
+}
 body { background: #ddd; margin: 0; padding: 0; width: 100%; height: 100%; }
 div#page { max-width: 1146px; margin: 0em auto; border-left: 1px solid #aaa; border-right: 1px solid #aaa; background: #fff; min-height: 101%; }
 div#main { padding: 1% }
@@ -23,6 +45,7 @@ div.error { background: #fff; color: #800; font-weight: bold; display: block }
 div.id { text-align: center; background: #eee; padding: 1ex; border-radius: 1ex; border: 1px solid black}
 </style>
 <script type="text/javascript" src="jquery.min.js"></script>
+<script type="text/javascript" src="fancyforms.js"></script>
 <script type="text/javascript" src="forms.js"></script>
 <script type="text/javascript">
 "use strict"
@@ -66,41 +89,8 @@ function getElem(id) { return document.getElementById(id) }
 function next(h) { var n=0; for (var k in h) if (Number(k)>=n) n = Number(k)+1; return n }
 function count(h) { var n=0; for (var k in h) if (h.hasOwnProperty(k)) n++; return n }
 
-function getValue(field) {
-  if (field.tagName.toLowerCase() == 'input') {
-    if (field.type == 'text') return field.value
-    if (field.type == 'date') return field.value
-    if (field.type == 'radio') {
-      var radios = document.getElementsByName(field.id);
-      for (var i in radios) if (radios[i].checked) return radios[i].value
-    }
-  } else if (field.tagName.toLowerCase() == 'select') {
-    return field.selectedIndex < 0 ? undefined : field.options[field.selectedIndex].value
-  } else if (field.tagName.toLowerCase() == 'textarea') {
-    return field.value
-  }
-}
-
-function setValue(field,value) {
-  if (field.tagName.toLowerCase() == 'input') {
-    if (field.type == 'text') field.value = value
-    if (field.type == 'textarea') return field.value
-    if (field.type == 'date') field.value = value
-    if (field.type == 'radio') {
-      var radios = document.getElementsByName(field.id);
-      for (var i=0; i<radios.length; i++) {
-        var r = radios[i]
-        r.checked = (r.value == value ? true : false)
-      }
-    }
-  } else if (field.tagName.toLowerCase() == 'select') {
-    var options = field.options
-    for (var i=0; i<options.length; i++) if (options[i].value == value) field.selectedIndex = i
-  }
-}
-
-function setOptions(field,type,options) {
-  if (type == 'select') {
+function setOptions(field,options) {
+  if (field.tagName.toLowerCase() == 'select') {
     var val = getValue(field)
     // remove old options
     for (var k=field.options.length-1; k>=0; k--) field.remove(k)
@@ -110,163 +100,22 @@ function setOptions(field,type,options) {
       var oElem = document.createElement('OPTION')
       oElem.value = k
       oElem.text = o.EN+(o.NL != o.EN ? ' / '+o.NL : '')
-      if (k.charAt(0) == '_') oElem.disabled = true
-      else if (k == val) oElem.selected = true
+      if (k.charAt(0) == '_') {
+        oElem.disabled = true
+        if (val === undefined) oElem.selected = true
+      }
+      if (k == val) oElem.selected = true
       field.add(oElem,null)
     }
   }
 }
 
-function fieldValue(formKey,k) {
-  return getValue(getElem(formKey+'-'+k))
-}
-
-/* initialization of forms and values */
-function initForm(formKey) {
-  var a = []
-  var form = FORMS[formKey]
-  var fields = form.fields
-  var complex = !form.simple
-  a.push('<table class="add">')
-  a.push('<tr>')
-  if (complex) {
-    var itemName = LANG[formKey]
-    var nameHtml = '<span class="EN">'+itemName.EN[0]+'</span><span class="NL">'+itemName.NL[0]+'</span>'
-    a.push('<td rowspan="'+(2*count(fields)+2)+'" style="padding-right:2ex"><div class="id">'+nameHtml+'<br><select id="'+formKey+'-id" onchange="selectItem(getValue(this),\''+formKey+'\')"><option selected value="0">0</option></select></div></td>')
-  }
-  a.push('<td colspan="4"><div id="'+formKey+'-form-error" class="error"/></td></tr>')
-  for (var k in fields) {
-    var f = fields[k]
-    a.push('<tr><td colspan="4"><div id="'+formKey+'-'+k+'-error" class="error"/></td></tr>')
-    a.push('<tr><td class="key"><span class="EN">'+f.name.EN+'</span><span class="NL">'+f.name.NL+'</span></td><td class="price">'+(f.price ? '&euro; '+f.price.toFixed(2) : '')+'</td><td class="colon">:</td><td class="value">')
-    if (f.type == 'text') a.push('<input id="'+formKey+'-'+k+'" type="text" value=""/>')
-    if (f.type == 'textarea') a.push('<textarea id="'+formKey+'-'+k+'" rows="3" value=""></textarea>')
-    if (f.type == 'date') a.push('<input id="'+formKey+'-'+k+'" type="date" value=""/>')
-    if (f.type == 'select') {
-      a.push('<select id="'+formKey+'-'+k+'"'+(complex ? 'onchange="updateForm(\''+formKey+'\')"' : 'onchange="simpleChange(\''+formKey+'\',\''+k+'\')"')+'>')
-      var options = f.options()
-      for (var n in options) {
-        var o = options[n]
-        var optionName = o.EN+(o.NL != o.EN ? ' / '+o.NL : '')
-        a.push('<option value="'+n+'">'+optionName+'</option>')
-      }
-      a.push('</select>')
-    }
-    if (f.type == 'radio') {
-      var options = f.options()
-      var first = true
-      for (var n in options) {
-        var optionName = '<span class="EN">'+options[n].EN+'</span><span class="NL">'+options[n].NL+'</span>'
-        a.push('<input '+(first ? 'id="'+formKey+'-'+k+'" ' : '')+' name="'+formKey+'-'+k+'" type="radio" value="'+n+'"/>'+optionName)
-        first = false
-      }
-    }
-    a.push('</td></tr>')
-  }
-  if (complex) {
-    var editHtml = '<span class="EN">Add/edit this '+itemName.EN[0]+'</span><span class="NL">Wijzig/Voeg '+itemName.NL[0]+' toe</span>'
-    var deleteHtml = '<span class="EN">Delete this '+itemName.EN[0]+'</span><span class="NL">Verwijder '+itemName.NL[0]+'</span>'
-    a.push('<tr><td colspan="4"><button onclick="addItem(\''+formKey+'\')">'+editHtml+'</button>&nbsp;<button onclick="deleteItem(\''+formKey+'\')"/>'+deleteHtml+'</td></tr>')
-  }
-  a.push('</table>')
-  getElem(formKey+'-form').innerHTML = a.join('')
-  if (complex) updateItems(formKey);
-  else updateValues(formKey) 
-}
-
 /* callback functions */
-function selectItem(id,formKey) {
-  var items = DATA[formKey]
-  var r = items[id]
-  var fields = FORMS[formKey].fields
-  if (!r) { 
-    r = {}; 
-    for (var k in fields) { 
-      r[k] = fields[k].default || ''
-    }
-  }
-  var elem = getElem(''+formKey+'-id')
-  var options = elem.options
-  for (var k in options) { if (options[k].value == id) elem.selectedIndex = k }
-  for (var k in fields) {
-    setValue(getElem(formKey+'-'+k),r[k])
-  }
-}
-
-function updateItems(formKey) {
-  var items = DATA[formKey]
-  var fields = FORMS[formKey].fields
-  var a = []
-  a.push('<div class="list"><span class="EN">List of '+LANG[formKey].EN[1]+'</span><span class="NL">Lijst met '+LANG[formKey].NL[1]+'</span>:<table class="list">')
-  for (var id in items) {
-    var r = items[id]
-    if (r) {
-      a.push('<tr onclick="selectItem('+id+',\''+formKey+'\')"><td>'+id+'</td>')
-      for (var k in r) {
-        var f = fields[k]
-        var opts = (f && f.options && f.options()) || {}
-        var v = opts[r[k]]
-        v = v ? '<span class="NL">'+v.NL+'</span><span class="EN">'+v.EN+'</span>' : r[k]
-        a.push('<td>'+v+'</td>')
-      }
-      a.push('</tr>')
-    }
-  }
-  a.push('<tr onclick="selectItem('+next(items)+',\''+formKey+'\')"><td colspan="100"><span class="EN">(next)</span><span class="NL">(volgende)</span></td></tr></tr>')
-  a.push('</table></div>')
-  getElem(''+formKey+'-list').innerHTML = a.join('')
-  a = []
-  for (var id in items) {
-    a.push('<option value="'+id+'">'+id+'</option>')
-  }
-  id = next(items)
-  a.push('<option selected value="'+id+'">'+id+'</option>')
-  getElem(''+formKey+'-id').innerHTML = a.join('')
-  selectItem(id,formKey)
-}
-
 function updateValues(formKey) {
   var values = DATA[formKey]
   for (var k in values) {
     var elem = getElem(''+formKey+'-'+k)
     setValue(elem,values[k])
-  }
-}
-
-/* updates form values and options */
-function updateForm(formKey) {
-  var fields = FORMS[formKey].fields
-  for (var k in fields) {
-    var f = fields[k]
-
-    var val = f.preset && f.preset(formKey)
-    var elem = getElem(formKey+'-'+k)
-    if (val) setValue(elem,val)
-    if (f.type == 'select') elem.disabled = !!val
-
-    var options = (f.type == 'select') && f.options(formKey)
-    if (options) {
-      setOptions(elem,f.type,options)
-    }
-  }
-}
-
-function updateForms(modifiedItem) {
-  var skip = true
-  for (var formKey in FORMS) {
-    if (formKey == modifiedItem) skip = false
-    if (!skip) {
-      updateForm(formKey)
-    }
-  }
-}
-
-function toggleError(id,msg) {
-  if (msg) {
-    FORM_ERROR = true
-    var e = getElem(''+id+'-error'); e.innerHTML = msg; e.style.display = 'block'
-  } else {
-    var e = getElem(''+id+'-error'); e.innerHTML = msg; e.style.display = 'none'
   }
 }
 
@@ -351,10 +200,10 @@ function summaryItem() {
 }
 
 function summarize() {
+  var submitErrors = []
   var a = []
-  var amount = 0
-  // form values to be submitted
-  getElem('submit-comment').value = JSON.stringify(DATA)
+  var total = 0
+  var submitData = {}
 
   // CAMPING
   a.push('<b>Camping</b><ul>')
@@ -362,10 +211,10 @@ function summarize() {
   var fields = FORMS['camping']
   // summary
   var price = getPrice('camping',['adultFri','childFri'])
-  amount += price
+  total += price
   a.push(summaryItem( {NL:'Op vrijdag kampeer je met ',EN:'On Friday, you camp with '}, values.adultFri || 0, {NL:' volwassenen en ',EN:' adults and '}, values.childFri || 0, {NL:' kinderen. Dit kost &euro; ', EN:' children. This costs &euro; '}, price.toFixed(2)+'.' ))
   price = getPrice('camping',['adultSat','childSat'])
-  amount += price
+  total += price
   a.push(summaryItem(
     {NL:'Op zaterdag kampeer je met ',EN:'On Saturday, you camp with '},
     values.adultSat || 0,
@@ -376,8 +225,7 @@ function summarize() {
   ))
   // form values to be submitted
   for (var k in values) {
-    var elem = getElem('submit-camping-'+k)
-    if (elem) elem.value = (Number(values[k]) || '')
+    submitData['submit-camping-'+k] = (Number(values[k]) || '')
   }
   
   // MEALS
@@ -385,32 +233,31 @@ function summarize() {
   values = DATA['meal']
   fields = FORMS['meal']
   // summary
-  price = getPrice('meal',['mealPlan'])
-  amount += price
+  price = getPrice('meal',['mealPlan','mealPlanVeg'])
+  total += price
   a.push(summaryItem(
     {EN:'You are ordering ',NL:'Je bestelt '},
-    values.mealPlan || 0,
+    Number(values.mealPlan || 0) + Number(values.mealPlanVeg || 0),
     {EN:' meal-plans (breakfast Sat/Sun, dinner Sat). This costs &euro; ',NL:' maaltijd-arrangementen (ontbijt za/zo, diner za). Dit kost &euro; '},
     price.toFixed(2)+'.'
   ))  
-  price = getPrice('meal',['mealFri','breakfastSat','mealSat','breakfastSun'])
-  amount += price
+  price = getPrice('meal',['mealFri','mealFriVeg','breakfastSat','breakfastSatVeg','mealSat','mealSatVeg','breakfastSun','breakfastSunVeg',])
+  total += price
   a.push(summaryItem( 
     {EN:'In addition, you order ',NL:'Daarnaast bestel je '}, 
-    values.mealFri || 0, 
+    Number(values.mealFri || 0) + Number(values.mealFriVeg || 0), 
     {EN:'x Friday dinner, ',NL:'x vrijdag maaltijd, '}, 
-    values.breakfastSat || 0, 
+    Number(values.breakfastSat || 0) + Number(values.breakfastSatVeg || 0), 
     {EN:'x Saturday breakfast, ',NL:'x zaterdag ontbijt, '}, 
-    values.mealSat || 0, 
+    Number(values.mealSat || 0) + Number(values.mealSatVeg || 0), 
     {EN:'x Saturday dinner and ',NL:'x zaterdag maaltijd en '}, 
-    values.breakfastSun || 0, 
+    Number(values.breakfastSun || 0) + Number(values.breakfastSunVeg || 0), 
     {EN:'x Sunday breakfast. This costs &euro; ',NL:'x zondag ontbijt. Dit kost &euro; '}, 
-    price+'.'
+    price.toFixed(2)+'.'
   ))
   // form values to be submitted
   for (var k in values) {
-    var elem = getElem('submit-meal-'+k)
-    if (elem) elem.value = (Number(values[k]) || '')
+    submitData['submit-meal-'+k] = (Number(values[k]) || '')
   }
 
   // RACES
@@ -427,12 +274,21 @@ function summarize() {
     var rd = races[d]
     for (var i=0; i<rd.length; i++) {
       var formKey = rd[i]
-      var br = DATA[formKey] // bike+rider
-      for (var k in br) {
-        if (br[k]) {        
-          var r = br[k].rider
+      var ribi = DATA[formKey] // rider+bike
+      for (var k in ribi) {
+        if (ribi[k]) {
+          var r = ribi[k].rider
+          var b = ribi[k].bike
+          if (!DATA.rider[r]) submitErrors.push('<span class="EN">Race '+FORMS[formKey].name.EN+' contains an undefined rider</span><span class="NL">Race '+FORMS[formKey].name.NL+' bevat een ongeldige rijder</span>.')
+          if (!DATA.bike[b]) submitErrors.push('<span class="EN">Race '+FORMS[formKey].name.EN+' contains an undefined bike</span><span class="NL">Race '+FORMS[formKey].name.NL+' bevat een ongeldige fiets</span>.')
           if (!riderRaces[r]) riderRaces[r] = [[],[],[]]
-          riderRaces[r][d].push(formKey)
+          var raceName = multiLang(FORMS[formKey].name)
+          if (riderRaces[r][d].indexOf(raceName) < 0) {
+            riderRaces[r][d].push(raceName)
+          } else {
+            var riderName = FORMS.rider.stringify(DATA.rider[r])
+            submitErrors.push('<span class="EN">Rider '+riderName+' is registering more than once for the race "'+raceName+'".</span><span class="NL">Rijder '+riderName+' schrijft zich dubbel in voor de race "'+raceName+'".</span>')
+          }
         }
       }
     }
@@ -451,10 +307,10 @@ function summarize() {
     if (numSat && numSun) { numTwoDays++; price = HIDDEN.race.twoDays.price }
     else if (numSat) { numSatOnly++; price = HIDDEN.race.oneDay.price }
     else if (numSun) { numSunOnly++; price = HIDDEN.race.oneDay.price }
-    amount += price
+    total += price
     a.push(summaryItem(
       {EN:'Rider ',NL:'Rijder '},
-      r,
+      FORMS.rider.stringify(DATA.rider[r]),
       {EN:' participates in '+(sat || 'nothing'),NL:' doet mee aan '+(sat || 'niets')},
       {EN:' on Saturday and '+(sun || 'nothing'),NL:' op zaterdag en '+(sun || 'niets')},
       {EN:' on Sunday. This costs &euro; ',NL:' op Zondag. Dit kost &euro; '},
@@ -462,33 +318,43 @@ function summarize() {
     ))
   }  
   a.push('</ul><b><span class="EN">Total</span><span class="NL">Totaal</span></b><ul>')
-  a.push(summaryItem({EN:'The total amount of your order is &euro; ',NL:'Het totaalbedrag van uw bestelling is &euro; '},amount+'.'))
+  a.push(summaryItem({EN:'The total amount of your order is &euro; ',NL:'Het totaalbedrag van uw bestelling is &euro; '},total.toFixed(2)+'.'))
   // form values to be submitted
-  var elem = getElem('submit-race-satSun')
-  if (elem) elem.value = (numTwoDays || '')
-  var elem = getElem('submit-race-sat')
-  if (elem) elem.value = (numSatOnly || '')
-  var elem = getElem('submit-race-sun')
-  if (elem) elem.value = (numSunOnly || '')
+  submitData['submit-race-satSun'] = (numTwoDays || '')
+  submitData['submit-race-sat'] = (numSatOnly || '')
+  submitData['submit-race-sun'] = (numSunOnly || '')
 
+  var setElem = function(k,v) {
+    var elem = getElem(k)
+    if (elem) elem.value = v
+    else submitErrors.push('<span class="EN">No element #'+k+' found to put value "'+v+'"</span><span class="NL">Geen element #'+k+' gevonden om waarde "'+v+'" toe te kennen</span>.')
+  }
+  for (var k in submitData) setElem(k,submitData[k])
+  DATA._submitData = submitData
+  DATA._price = total
+  DATA._submitErrors = submitErrors
+  // submit DATA in the comment field
+  setElem('submit-comment',JSON.stringify(DATA))
   getElem('summary').innerHTML = a.join('')
+  getElem('submit-error').innerHTML = submitErrors.length ? '<span class="EN">Summary contains errors</span><span class="NL">Overzicht bevat fouten</span>: <ul><li>'+submitErrors.join('</li><li>')+'</li></ul>' : ''
+  getElem('submit').disabled = (submitErrors.length > 0)
 }
 
-function prefillUser(data) {
+function prefillUser(userInfo) {
   if (!DATA.rider || !DATA.rider.length) {
-    getElem('rider-email').value = data.email
-    getElem('rider-nickname').value = data.username
-    getElem('rider-ligfietsnet').value = data.id
-    if (data.profile) {
-      //var parts = data.profile.birthdate.split('-')
-      var parts = '16-04-1972'.split('-')
+    getElem('rider-email').value = userInfo.email
+    getElem('rider-nickname').value = userInfo.username
+    getElem('rider-ligfietsnet').value = userInfo.id
+    if (userInfo.profile) {
+      var parts = userInfo.profile.birthdate.split('-')
+      //var parts = '16-04-1972'.split('-')
       if (parts.length == 3) {
         var date = new Date(Number(parts[2]),Number(parts[1])-1,Number(parts[0]),12)
         //var date = new Date(1972,6,2)
         getElem('rider-birthDate').value = date.toISOString().substr(0,10);
       }
-      getElem('rider-city').value = data.profile.city
-      var parts = data.profile.fullname.split(' ')
+      getElem('rider-city').value = userInfo.profile.city
+      var parts = userInfo.profile.fullname.split(' ')
       var lastName = parts.pop()
       getElem('rider-lastName').value = lastName
       getElem('rider-firstName').value = parts.join(' ')
@@ -496,111 +362,110 @@ function prefillUser(data) {
   }
 }
 
+function contactUs(reason) {
+  var msg = encodeURIComponent('Type your message here / Typ uw bericht hier.\n\n\n\n\n\n\n\n\nDO NOT EDIT BELOW THIS LINE / WIJZIG HIERONDER NIETS\n<pre>\n/* begin DATA */\n'+JSON.stringify(DATA,null,2)+'\n/* end DATA */</pre>\n')
+  window.location.href = 'mailto:cyclevision@gmail.com?subject='+encodeURIComponent(reason)+'&body='+msg
+}
+
+function onload(userInfo) {
+  initData(); 
+  if (userInfo) DATA._userInfo = userInfo
+  for (var k in FORMS) initForm(k); 
+  initLanguage()
+}
+
 function onloadUserinfo() {
+  //getElem('forms').innerHTML = '<span class="EN">Race-registration is now closed. If you\'d like to come and race anywway, <a href="mailto:cyclevision@gmail.com">email us</a>. If you are a racer and arrive at the event without registration, you can still participate but pay extra. Campers are always welcome, please pay at the registration desk.</span><span class="NL">De wedstrijdinschrijving is nu gesloten. Als je toch mee wilt racen, <a href="mailto:cyclevision@gmail.com">stuur dan een email</a>. Als je racer bent maar zonder registratie aankomst op CycleVision, dan kun je je nog tegen verhoogd tarief inschrijven en cash betalen. Kampeerders zijn altijd welkom, graag melden en betalen bij de inschrijftafel.</span>'
+  //
   $.ajax({
     url: 'https://www.ligfiets.net/userinfo',
     method: 'GET',
     xhrFields: {
       withCredentials: true
     }
-  }).done(function(data) {
-    if (data && data.id) {
-      initData(); 
-      for (var k in FORMS) initForm(k); 
-      initLanguage()
-      prefillUser(data)
+  }).done(function(userInfo) {
+    if (userInfo && userInfo.id) {
+      onload(userInfo)
+      prefillUser(userInfo)
     } else {
       getElem('forms').innerHTML = '<a href="https://www.ligfiets.net/user/login"><span class="EN">Login to your ligfiets.net account</span><span class="NL">Log eerst in bij ligfiets.net</span></a><span class="EN"> first, or </span><span class="NL">, of </span><a href="https://www.ligfiets.net/user/register"><span class="EN">create an account</span><span class="NL">maak een account aan</span></a>, <span class="EN">then refresh this page</span><span class="NL">ververs daarna deze pagina</span>.'
     }
   }).fail(function(msg) {
     console.log('Failure to query ligfiets.net')
-    initData(); 
-    for (var k in FORMS) initForm(k); 
-    initLanguage()
+    onload()
   })
+  //
 }
 </script>
 </head>
 <body>
-<iframe height="1" width="1" src="https://www.ligfiets.net/userinfo" onload="onloadUserinfo()"></iframe>
+<iframe height="1" width="1" src="https://www.ligfiets.net/user/register" onload="onloadUserinfo()"></iframe>
 <!-- start page--><div id="page">
 <img src="cvheader2017blauw.png" style="width: 1146px; height:150px"/>
 <!-- start main--><div id="main">
-<p>Choose your language / Kies uw taal</p>
+<p>Choose your language / Kies je taal</p>
 <div class="lang"><input type="button" value="ENGLISH" onclick="selectLanguage('EN')">&nbsp;<input type="button" value="NEDERLANDS" onclick="selectLanguage('NL')"></div>
 <p><span class="EN">Welcome to the <b>CycleVision registration module</b>. It allows you to
 register multiple riders with multiple bikes.<br/>If you are not participating in any races, you can also use the <a href="http://www.ligfiets.net/event/3771/cycle-vision.html">simple form at Ligfiets.net</a>.</span><span class="NL">Welkom bij de <b>CycleVision registratie module</b>. Hiermee kun je meerdere rijders met verschillende fietsen inschrijven voor de races.<br/>Als je geen races rijdt kun je ook het <a href="http://www.ligfiets.net/event/3771/cycle-vision.html">simpele Ligfiets.net formulier</a> gebruiken.</span>
-<!-- start forms--><div id="forms"><span class="EN">Make sure you are logged in to your <a href="https://www.ligfiets.net/user/login" "target="_blank">Ligfiets.net account</a> before you continue.
-<br/>Fill out the forms below, 
+<!-- start forms--><div id="forms"><span class="EN">Fill out the forms below, 
 click [Register] at the bottom, and you will be taken back to the Ligfiets.net
-registration page where you can confirm and pay.</span><span class="NL">Zorg dat je ingelogd bent op <a href="https://www.ligfiets.net/user/login" "target="_blank">Ligfiets.net</a> voordat je verder gaat.
-<br/>Vul de formulieren hieronder in, druk daarna helemaal onderaan op [Registreer], en je wordt teruggeleid naar de Ligfiets.net inschrijfpagina waar je kunt bevestigen en betalen.</span>
+registration page where you can confirm and pay.</span><span class="NL">Vul de formulieren hieronder in, druk daarna helemaal onderaan op [Registreer], en je wordt teruggeleid naar de Ligfiets.net inschrijfpagina waar je kunt bevestigen en betalen.</span>
 </p>
 <h2>Camping</h2>
 
-<div id="camping-form">
-</div>
+<div id="camping-descr"></div>
+<br/><div id="camping-form"></div>
 
 <h2><span class="EN">Meals</span><span class="NL">Maaltijden</span></h2>
 
-<div id="meal-form">
-</div>
+<div id="meal-descr"></div>
+<br/><div id="meal-form"></div>
+
+<h2><span class="EN">General</span><span class="NL">Algemeen</span></h2>
+
+<div id="general-form"></div>
 
 <h2><span class="EN">Races</span><span class="NL">Wedstrijden</span></h2>
 
 <h3>Team</h3>
 <span class="EN">Enter the details for all riders that you are registering, including
 yourself.</span><span class="NL">Vul voor iedere rijder die je aanmeldt de gegevens in, ook voor jezelf.</span>
-<div id="rider-list">
-</div>
-<div id="rider-form">
-</div>
+<div id="rider-descr"></div>
+<div id="rider-list"></div>
+<div id="rider-form"></div>
 
 <h3><span class="EN">Bikes</span><span class="NL">Fietsen</span></h3>
 <span class="EN">Enter the details for all bikes that you/your team will use.</span><span class="NL">Maak hier een lijst met alle fietsen die jij of je team gaat inzetten.</span>
-<div id="bike-list">
-</div>
-<div id="bike-form">
-</div>
+<div id="bike-descr"></div>
+<div id="bike-list"></div>
+<div id="bike-form"></div>
 
 <h3><span class="EN">Race disciplines</span><span class="NL">Wedstrijdonderdelen</span></h3>
 <span class="EN">Enter for each race which rider+bike combinations will participate. In case of a tandem, also enter the stoker+bike combination.</span><span class="NL">Vul voor elke race de deelnemende rijder+fiets combinaties in. Voeg in geval van een tandem ook de stoker+fiets combinatie toe.</span>
-<h3><span class="EN">1 hour time trial (Saturday)</span><span class="NL">1 uurs tijdrit (Zaterdag 9:00 buiten)</span></h3>
-<div id="onehour-list">
-</div>
-<div id="onehour-form">
-</div>
+<h3><span class="EN">1 hour time trial (Saturday, outdoor track)</span><span class="NL">1 uurs tijdrit (Zaterdag buitenbaan)</span></h3>
+<div id="onehour-descr"></div>
+<div id="onehour-list"></div>
+<div id="onehour-form"></div>
 
-<h3><span class="EN">Fastest lap flying start (200m) indoor (Saturday)</span><span class="NL">Snelste vliegende start (200m) velodrome (Zaterdag 13:00 binnen)</span></h3>
-<div id="indoor1lap-list">
-</div>
-<div id="indoor1lap-form">
-</div>
+<h3><span class="EN">Fastest lap flying start (200m) (Saturday, indoor track)</span><span class="NL">Snelste ronde vliegende start (200m) velodrome (Zaterdag binnenbaan)</span></h3>
+<div id="indoor1lap-descr"></div>
+<div id="indoor1lap-list"></div>
+<div id="indoor1lap-form"></div>
 
-<h3><span class="EN">Criterium for single-track bikes (Saturday 19:00 outdoor)</span><span class="NL">Criterium voor tweewielers (Zaterdag 19:00 buiten)</span></h3>
-<div id="singletrack-list">
-</div>
-<div id="singletrack-form">
-</div>
+<h3><span class="EN">Criterium for single-track bikes (Saturday, outdoor track)</span><span class="NL">Criterium (Zaterdag buitenbaan)</span></h3>
+<div id="criterium-descr"></div>
+<div id="criterium-list"></div>
+<div id="criterium-form"></div>
 
-<h3><span class="EN">Criterium for multi-track bikes (Saturday 21:00 outdoor)</span><span class="NL">Criterium voor drie/vierwielers (Zaterdag  21:00 buiten)</span></h3>
-<div id="multitrack-list">
-</div>
-<div id="multitrack-form">
-</div>
+<h3><span class="EN">Fastest lap outdoor (Sunday, outdoor track)</span><span class="NL">Snelste ronde buiten (Zondag, buitenbaan)</span></h3>
+<div id="outdoor1lap-descr"></div>
+<div id="outdoor1lap-list"></div>
+<div id="outdoor1lap-form"></div>
 
-<h3><span class="EN">Fastest lap outdoor (Sunday 20:30 outdoor)</span><span class="NL">Snelste ronde buiten (Zondag 20:30 buiten)</span></h3>
-<div id="outdoor1lap-list">
-</div>
-<div id="outdoor1lap-form">
-</div>
-
-<h3><span class="EN">Combined 3 and 6 hour race (Sunday)</span><span class="NL">Gecombineerde 3/6 uurs race (Zondag 10:00 buiten)</span></h3>
-<span class="EN">Note: the 6 hour race will only proceed with 10 or more participants.</span><span class="NL">Let op: de 6 uursrace gaat alleen door als er tenmminste 10 deelnemers zijn.</span>
-<div id="threehour-list">
-</div>
-<div id="threehour-form">
-</div>
+<h3><span class="EN">Simultaneous 3 and 6 hour race (Sunday, outdoor track)</span><span class="NL">Gelijktijdige 3/6 uurs race (Zondag, buitenbaan)</span></h3>
+<div id="threehour-descr"></div>
+<div id="threehour-list"></div>
+<div id="threehour-form"></div>
 
 <!--h2><span class="EN">Confirm and pay</span><span class="NL">Bevestig en betaal</span></h2-->
 
@@ -620,9 +485,15 @@ yourself.</span><span class="NL">Vul voor iedere rijder die je aanmeldt de gegev
   <input type="hidden" id="submit-race-satSun" name="stuffs[stuff_639]"/>
   <input type="hidden" id="submit-race-sat" name="stuffs[stuff_640]"/>
   <input type="hidden" id="submit-race-sun" name="stuffs[stuff_641]"/>
+  <input type="hidden" id="submit-meal-mealFriVeg" name="stuffs[stuff_646]"/>
+  <input type="hidden" id="submit-meal-mealPlanVeg" name="stuffs[stuff_647]"/>
+  <input type="hidden" id="submit-meal-breakfastSatVeg" name="stuffs[stuff_648]"/>
+  <input type="hidden" id="submit-meal-mealSatVeg" name="stuffs[stuff_649]"/>
+  <input type="hidden" id="submit-meal-breakfastSunVeg" name="stuffs[stuff_650]"/>
   <input type="hidden" id="submit-comment" name="comment"/>
-  <span class="EN">Make sure you are logged in to your <a href="https://www.ligfiets.net/user/login" "target="_blank">Ligfiets.net account</a> before you continue.</span><span class="NL">Zorg dat je ingelogd bent op <a href="https://www.ligfiets.net/user/login" "target="_blank">Ligfiets.net</a> voordat je verder gaat.</span>
-  <p><input type="submit" id="submit" value="Register &amp; Pay / Registreer &amp; Betaal"/></p>
+  <span class="EN">Make sure you are logged in to your <a href="https://www.ligfiets.net/user/login" target="_blank">Ligfiets.net account</a> before you continue. Should the next step display an error, go back to this page and press <a href="javascript:contactUs('Registration error');">here</a> to submit the error.<br/>If you are already registered, you can <a href="javascript:contactUs('Change my registration')">request a change</a> to your registration.</span><span class="NL">Zorg dat je ingelogd bent op <a href="https://www.ligfiets.net/user/login" target="_blank">Ligfiets.net</a> voordat je verder gaat. Mocht de volgende stap tot een foutmelding leiden, ga dan terug naar deze pagina en <a href="#" onclick="javascript:contactUs('Fout bij inschrijving');">klik hier</a> om de fout te melden. Fout 500 betekent meestal dat je al ingeschreven bent. Als je verkeerd ingeschreven bent kun je je uitschrijven via de 'uitschrijven' link op <a href="http://www.ligfiets.net/event/3773/cycle-vision-vrijwilligers.html" target="_blank">deze pagina</a>, en daarna opnieuw hier registreren.<br/>Als je al betaald hebt en wilt wijzigen, dan kun je dat het best <a href="javascript:contactUs('Wijzig mijn inschrijving')">via email</a> doorgeven.</span>
+  <p><div id="submit-error" class="error"></div>
+  <input type="submit" id="submit" value="Register &amp; Pay / Registreer &amp; Betaal"/></p>
 </form>
 </p>
 

@@ -2,7 +2,10 @@ var DATA = {}
 
 var FORMS = {
   rider: {
-    stringify: function(row) { return row.firstName+' '+row.lastName },
+    item: { NL:'rijder',EN:'rider' },
+    thisItem: { NL:'deze rijder',EN:'this rider' },
+    items: { NL:'rijders',EN:'riders' },
+    stringify: function(row) { if (row) return row.firstName+' '+row.lastName },
     fields: {
       firstName: { name: { NL: "Voornaam", EN: "First name" }, type: "text", check: checkName },
       lastName: { name: { NL: "Achternaam", EN: "Last name" }, type: "text", check: checkName },
@@ -12,84 +15,133 @@ var FORMS = {
       birthDate: { name: { NL: "Geboortedatum", EN: "Date of birth" }, type: "date", check: checkBirth },
       email: { name: { NL: "Email adres", EN: "Email address" }, type: "text", check: checkEmail, default: '' },
       nickname: { name: { NL: "Bijnaam", EN: "Nick name" }, type: "text", check: checkName, default: '' },
-      ligfietsnet: { name: { NL: "Ligfiets.net ID", EN: "Ligfiets.net ID" }, type: "text", check: checkLigfietsnet, default: '' },
-      bend: { name: { NL: "Verdien punten voor BeND", EN: "Earn points for BeND" }, type: "radio", check: checkRadio, options: bendOptions, default: 'no' },
+      ligfietsnet: { name: { NL: "Ligfiets.net ID", EN: "Ligfiets.net ID" }, type: "text", check: checkLigfietsnet, default: '', tooltip:{EN:"Needed if you want to see your race results at Ligfiets.net.",NL:"Nodig als je je resultaten op Ligfiets.net wilt zien."} },
+      bend: { name: { NL: "Verdien punten voor BeND", EN: "Earn points for BeND" }, type: "radio", check: checkRadio, options: bendOptions, default: "no", tooltip: {EN:"BeND is the Belgian-Dutch-German joint HPV competition. Select 'yes' if you participate in it.",NL:"BeND is de Belgisch-Nederlands-Duitse HPV competitie. Selecteer 'ja' als je daaraan deelneemt."} },
       about: { name: { NL: "Over jezelf (voor pers)", EN: "About yourself (for press)" }, type: "textarea", check: checkName, default: '' }
     }
   },
   bike: {
-    stringify: function(row) { return (row.name ? '"'+row.name+'" ' : '') + row.make },
+    item: { NL:'fiets',EN:'bike' },
+    thisItem: { NL:'deze fiets',EN:'this bike' },
+    items: { NL:'fietsen',EN:'bikes' },
+    stringify: function(row) { if (row) return (row.name ? '"'+row.name+'" ' : '') + row.make },
     fields: {
       name: { name: { NL: "Koosnaam", EN: "Given name" }, type: "text", check: checkName, default: '' },
-      standard: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: standardOptions },
-      make: { name: { NL: "&nbsp;&nbsp;Merk en type", EN: "&nbsp;&nbsp;Make and type" }, type: "text", check: checkName, default: '', preset: makePreset },
-      track: { name: { NL: "&nbsp;&nbsp;Aantal wielen", EN: "&nbsp;&nbsp;Number of wheels" }, type: "radio", check: checkRadio, options: trackOptions, preset: trackPreset },
-      tandem: { name: { NL: "&nbsp;&nbsp;Aantal wielen", EN: "&nbsp;&nbsp;Number of riders" }, type: "radio", check: checkRadio, options: tandemOptions, preset: tandemPreset, default: "no" },
+      standard: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: standardOptions, default: '_' },
+      make: { name: { NL: "&nbsp;&nbsp;Merk en type", EN: "&nbsp;&nbsp;Make and type" }, type: "text", check: checkName, preset: makePreset, default: '' },
+      track: { name: { NL: "&nbsp;&nbsp;Aantal wielen", EN: "&nbsp;&nbsp;Number of wheels" }, type: "radio", check: checkRadio, options: trackOptions, preset: trackPreset, default: '' },
+      tandem: { name: { NL: "&nbsp;&nbsp;Aantal rijders", EN: "&nbsp;&nbsp;Number of riders" }, type: "radio", check: checkRadio, options: tandemOptions, preset: tandemPreset, default: "no" },
       fairing: { name: { NL: "&nbsp;&nbsp;Stroomlijn", EN: "&nbsp;&nbsp;Fairing" }, type: "radio", check: checkRadio, options: fairingOptions, preset: fairingPreset, default: "full" },
       drive: { name: { NL: "&nbsp;&nbsp;Aandrijving", EN: "&nbsp;&nbsp;Drive" }, type: "select", check: checkSelect, options: driveOptions, preset: drivePreset },
       about: { name: { NL: "Over je fiets (voor pers)", EN: "About your bike (for press)" }, type: "textarea", check: checkName, default: '' }
     }
   },
   onehour: {
+    item: { NL:'deelnemer',EN:'entry' },
+    thisItem: { NL:'deze deelnemer',EN:'this entry' },
+    items: { NL:'rijders+fietsen voor de 1-uurs race',EN:'riders+bikes for the 1 hour race'},
+    name: {EN:'One hour race',NL:'Eenuursrace'},
     day: 1,
     fields: {
       rider: { name: { NL: "Rijder", EN: "Rider" }, type: "select", check: checkSelect, options: riderOptions },
-      bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions }
+      bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions },
+      speed: { name: { NL: "Verwachte snelheid", EN: "Expected speed" }, type: "select", check: checkSelect, options: speedOptions, tooltip: {EN:'Used for start-order.',NL:'Wordt gebruikt voor start volgorde.'} }
     }
   },
   indoor1lap: {
+    item: { NL:'deelnemer',EN:'entry' },
+    thisItem: { NL:'deze deelnemer',EN:'this entry' },
+    items: { NL:'rijders+fietsen voor de snelste ronde in het velodrome',EN:'riders+bikes for the fastest lap indoor' },
+    name: {EN:'Fastest lap 200m indoor',NL:'Snelste ronde 200m binnen'},
     day: 1,
     fields: {
       rider: { name: { NL: "Rijder", EN: "Rider" }, type: "select", check: checkSelect, options: riderOptions },
-      bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions }
+      bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions },
+      speed: { name: { NL: "Verwachtte snelheid", EN: "Expected speed" }, type: "select", check: checkSelect, options: speedOptions, tooltip: {EN:'Used for start-order.',NL:'Wordt gebruikt voor start volgorde.'} }
     }
   },
-  singletrack: {
+  criterium: {
+    item: { NL:'deelnemer',EN:'entry' },
+    thisItem: { NL:'deze deelnemer',EN:'this entry' },
+    items: { NL:'rijders+fietsen voor het criterium',EN:'riders+bikes for the criterium' },
+    name: {EN:'Criterium outdoor',NL:'Criterium buiten'},
     day: 1,
     fields: {
       rider: { name: { NL: "Rijder", EN: "Rider" }, type: "select", check: checkSelect, options: riderOptions },
-      bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions }
-    }
-  },
-  multitrack: {
-    day: 1,
-    fields: {
-      rider: { name: { NL: "Rijder", EN: "Rider" }, type: "select", check: checkSelect, options: riderOptions },
-      bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions }
+      bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions },
+      which: { name: { NL: "Welk criterium", EN: "Which criterium" }, type: "radio", check: checkRadio, options: criteriumOptions }
     }
   },
   outdoor1lap: {
-    day: 2,
-    fields: {
-      rider: { name: { NL: "Rijder", EN: "Rider" }, type: "select", check: checkSelect, options: riderOptions },
-      bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions }
-    }
-  },
-  threehour: {
+    item: { NL:'deelnemer',EN:'entry' },
+    thisItem: { NL:'deze deelnemer',EN:'this entry' },
+    items: { NL: 'rijders+fietsen voor de snelste ronde op de buitenbaan',EN:'riders+bikes for the fastest lap outdoor circuit' },
+    name: {EN:'Fastest lap 2.5 km outdoor',NL:'Snelste ronde 2.5 km buiten'},
     day: 2,
     fields: {
       rider: { name: { NL: "Rijder", EN: "Rider" }, type: "select", check: checkSelect, options: riderOptions },
       bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions },
-      duration: { name: { NL: "Duur", EN: "Duration" }, type: "radio", check: checkRadio, options: durationOptions }
+      speed: { name: { NL: "Verwachtte snelheid", EN: "Expected speed" }, type: "select", check: checkSelect, options: speedOptions, tooltip: {EN:'Used for start-order.',NL:'Wordt gebruikt voor startvolgorde.'} }
+    }
+  },
+  threehour: {
+    item: { NL:'deelnemer',EN:'entry' },
+    thisItem: { NL:'deze deelnemer',EN:'this entry' },
+    items: { NL:'rijders+fietsen voor de gecombineerde 3/6 uurs race',EN:'riders+bikes for the combined 3/6 hour race' },
+    name: {EN:'3/6 hour race',NL:'3/6-uursrace'},
+    descr: {
+      EN:'The 3 and 6 hour race are held at the same time but have separate rankings. You must choose in advance which one you participate in, but note that in the 6-hour race you can collect 1.5 times more points for the final ranking. If you change your mind: email cyclevision@gmail.com <b>no later than</b> 22nd of June.',
+      NL:'De 3- en 6-uursrace worden gelijktijdig gehouden. Je moet vooraf kiezen aan welke je deelneemt maar let op, in de 6-uurs kun je 1,5 keer zoveel punten verzamelen voor het eindklassement. Als je wilt wijzigen, email cyclevision@gmail.com <b>uiterlijk</b> 22 juni.'
+    },
+    day: 2,
+    fields: {
+      rider: { name: { NL: "Rijder", EN: "Rider" }, type: "select", check: checkSelect, options: riderOptions },
+      bike: { name: { NL: "Fiets", EN: "Bike" }, type: "select", check: checkSelect, options: bikeOptions },
+      duration: { name: { NL: "Duur", EN: "Duration" }, type: "radio", check: checkRadio, options: durationOptions, tooltip:{EN:"The 3 and 6 hour races are held at the same time, you must choose in advance in which one you compete. The 6 hour race counts for 150% in the final ranking.",NL:"De 3- en 6-uursraces worden tegelijk gehouden, je moet vooraf kiezen aan welke je deelneemt. De 6-uursrace telt voor 150% mee in het eindklassement."} }
     }
   },
   camping: {
+    item: { NL:'camping',EN:'camping' },
+    items: { NL:'camping',NL:'camping' },
     simple: true,
+    descr: {
+      EN:'We camp on the grass around the Velodrome in Sportpark Sloten, and use the facilities of the Olympia Cycling Club.',
+      NL:'We kamperen op de grasvelden rondom het Velodrome in Sportpark Sloten, en gebruiken de faciliteiten van wielervereniging Olympia.'
+    },
     fields: {
-      adultFri: { name: { NL: "Volwassenen vrijdag/zaterdag", EN: "Adults Friday/Saturday" }, price: 4, type: "select", options: countOptions },
+      adultFri: { name: { NL: "Volwassenen vrijdag/zaterdag", EN: "Adults Friday/Saturday" }, price: 4, type: "select", options: countOptions, tooltip: {EN:"No electricity, use of bathrooms and showers of the velodrome.",NL:"Geen electriciteit, gebruik wc/douche van velodrome."} },
       childFri: { name: { NL: "Kinderen &lt;16 vrijdag/zaterdag", EN: "Children &lt;16 Friday/Saturday" }, price: 2, type: "select", options: countOptions },
-      adultSat: { name: { NL: "Volwassenen zaterdag/zondag", EN: "Adults Saturday/Sunday" }, price: 4, type: "select", options: countOptions },
+      adultSat: { name: { NL: "Volwassenen zaterdag/zondag", EN: "Adults Saturday/Sunday" }, price: 4, type: "select", options: countOptions, tooltip: {EN:"No electricity, use of bathrooms and showers of the velodrome.",NL:"Geen electriciteit, gebruik wc/douche van velodrome."} },
       childSat: { name: { NL: "Kinderen &lt;16 zaterdag/zondag", EN: "Children &lt;16 Saturday/Sunday" }, price: 2, type: "select", options: countOptions }
     }
   },
   meal: {
+    item: { NL:'maaltijd',EN:'meal' },
+    items: { NL:'maaltijden',EN:'meals' },
+    simple: true,
+    descr: {
+      EN:'Meals are provided by the Olympia canteen, except on Friday when we have them delivered by a local Chinese restaurant. Breakfast includes bread rolls, savory/sweet toppings, coffee, tea, orange juice and milk. Pasta dish includes soup, pasta with choice of 2 sauces, green salad/tomato and mozarella, drink, dessert.',
+      NL:'Maaltijden worden verzorgd door de kantine van ASV Olympia, behalve op vrijdag, dan laten we ze bezorgen door de locale Chinees. Ontbijt bevat broodjes, hartig beleg, zoet beleg, koffie, thee, jus d’orange en melk. Pastamaaltijd bevat soep vooraf, pasta met 2 soorten saus, groene salade/tomaat en mozzarella, drankje, dessert. NB. In een eerdere versie van dit formulier werden de iets lagere prijzen van vorig jaar gehanteerd.'
+    },
+    fields: {
+      mealFri: { name: { NL: "Chinees buffet vrijdagavond", EN: "Meal (Chinese) Friday evening" }, price: 10, type: "select", options: countOptions, tooltip: {EN:"Chinese buffet, organized by NVHPV.",NL:"Chinees buffet, besteld door NVHPV."} },
+      mealFriVeg: { name: { NL: "&nbsp;&nbsp;Vegetarisch", EN: "&nbsp;&nbsp;Vegetarian" }, price: 10, type: "select", options: countOptions },
+      mealPlan: { name: { NL: "Maaltijden Zaterdag/Zondag (A+B+C combi)", EN: "Meals Saturday/Sunday (A+B+C combo)" }, price: 30, type: "select", options: countOptions, tooltip: {EN:"Organized by Olympia. A+B+C package-deal.",NL:"Verzorgd door Olympia A+B+C combi-voordeel."} },
+      mealPlanVeg: { name: { NL: "&nbsp;&nbsp;Vegetarisch (A+B+C combi)", EN: "&nbsp;&nbsp;Vegetarian (A+B+C combo)" }, price: 30, type: "select", options: countOptions },
+      breakfastSat: { name: { NL: "A. Ontbijt zaterdagochtend", EN: "A. Breakfast Saturday morning" }, price: 7.50, type: "select", options: countOptions, tooltip: {EN:"Organized by Olympia.",NL:"Verzorgd door Olympia."} },
+      breakfastSatVeg: { name: { NL: "&nbsp;&nbsp;Vegetarisch", EN: "&nbsp;&nbsp;Vegetarian" }, price: 7.50, type: "select", options: countOptions },
+      mealSat: { name: { NL: "B. Pasta maaltijd zaterdagavond", EN: "B. Dinner (Italian pasta) Saturday evening" }, price: 20, type: "select", options: countOptions, tooltip: {EN:"Organized by Olympia.",NL:"Verzorgd door Olympia."} },
+      mealSatVeg: { name: { NL: "&nbsp;&nbsp;Vegetarisch", EN: "&nbsp;&nbsp;Vegetarian" }, price: 20, type: "select", options: countOptions },
+      breakfastSun: { name: { NL: "C. Ontbijt zondagochtend", EN: "C. Breakfast Sunday morning" }, price: 7.50, type: "select", options: countOptions, tooltip: {EN:"Organized by Olympia.",NL:"Verzorgd door Olympia."} },
+      breakfastSunVeg: { name: { NL: "&nbsp;&nbsp;Vegetarisch", EN: "&nbsp;&nbsp;Vegetarian" }, price: 7.50, type: "select", options: countOptions }
+    }
+  },
+  general: {
+    item: { NL:'item',EN:'item' },
+    items: { NL:'items',EN:'items' },
     simple: true,
     fields: {
-      mealFri: { name: { NL: "Chinese maaltijd vrijdagavond", EN: "Meal (Chinese) Friday evening" }, price: 10, type: "select", options: countOptions },
-      mealPlan: { name: { NL: "Maaltijden Zaterdag/Zondag (2x ontbijt, 1x diner)", EN: "Meals Saturday/Sunday (2x breakfast, 1x dinner)" }, price: 27.50, type: "select", options: countOptions },
-      breakfastSat: { name: { NL: "Ontbijt zaterdagochtend", EN: "Breakfast Saturday morning" }, price: 6.50, type: "select", options: countOptions },
-      mealSat: { name: { NL: "Diner zaterdagavond", EN: "Dinner Saturday evening" }, price: 17.50, type: "select", options: countOptions },
-      breakfastSun: { name: { NL: "Ontbijt zondagochtend", EN: "Breakfast Sunday morning" }, price: 6.50, type: "select", options: countOptions }
+      comment: { name: { NL: "Algemene opmerking of feedback", EN: "General comment or feedback" }, type: "textarea", default: '' }
     }
   }
 }
@@ -122,13 +174,9 @@ var LANG = {
     NL: ['deelnemer','rijders+fietsen voor de snelste ronde op de buitenbaan'],
     EN: ['entry','riders+bikes for the fastest lap outdoor circuit']
   },
-  singletrack: {
-    NL: ['deelnemer','rijders+fietsen voor het tweewieler criterium'],
-    EN: ['entry','riders+bikes for the single track race']
-  },
-  multitrack: {
-    NL: ['deelnemer','rijders+fietsen voor het multi-track criterium'],
-    EN: ['entry','riders+bikes for the multi track race']
+  criterium: {
+    NL: ['deelnemer','rijders+fietsen voor het criterium'],
+    EN: ['entry','riders+bikes for the criterium']
   },
   threehour: {
     NL: ['deelnemer','rijders+fietsen voor de gecombineerde 3/6 uurs race'],
@@ -193,6 +241,18 @@ function genderOptions() {
     male: {EN:'male',NL:'man'},
     female: {EN:'female',NL:'vrouw'}
   }
+}
+
+function speedOptions() {
+  var options = {}
+  options['_'] = {EN:"Used for start order",NL:"Gebruikt voor startvolgorde"}
+  options['~25-'] = {EN:"25 or below",NL:"25 of minder"}
+  for (var s=26.0; s<80.0; s*=1.06) {
+    var s = Math.round(s)
+    options['~'+s] = {EN:''+s+" km/h",NL:''+s+" km/u"}
+  }
+  options['~80+'] = {EN:"80 or more",NL:"80 of meer"}
+  return options
 }
 
 function standardOptions() {
@@ -278,6 +338,13 @@ function bikeOptions() {
   return options
 }
 
+function criteriumOptions() {
+  return {
+    semifaired: {EN:'Un/semifaired',NL:'On- of halfgestroomlijnd'},
+    open: {EN:'Fully faired',NL:'Volledig gestroomlijnd'}
+  }
+}
+
 function durationOptions() {
   return {
     '3':{EN: '3 hours', NL: '3 uur'},
@@ -300,7 +367,7 @@ function makePreset(formKey) {
     quest: 'Velomobiel.nl Quest',
     df: 'InterCityBike DF'
   }
-  return ans[fieldValue(formKey,'standard')]
+  return ans[getValue(formKey+'-standard')]
 }
 
 function trackPreset(formKey) {
@@ -315,7 +382,7 @@ function trackPreset(formKey) {
     df: 'multi',
     thys222: 'single'
   }
-  return ans[fieldValue(formKey,'standard')]
+  return ans[getValue(formKey+'-standard')]
 }
 
 function fairingPreset(formKey) {
@@ -330,7 +397,7 @@ function fairingPreset(formKey) {
     quest: 'full',
     df: 'full'
   }
-  return ans[fieldValue(formKey,'standard')]
+  return ans[getValue(formKey+'-standard')]
 }
 
 function tandemPreset(formKey) {
@@ -339,7 +406,7 @@ function tandemPreset(formKey) {
     df: 'no',
     thys222: 'no'
   }
-  return ans[fieldValue(formKey,'standard')]
+  return ans[getValue(formKey+'-standard')]
 }
 
 function drivePreset(formKey) {
@@ -357,6 +424,5 @@ function drivePreset(formKey) {
     tandem: 'pedal',
     handbike: 'hand'
   }
-  return ans[fieldValue(formKey,'standard')]
+  return ans[getValue(formKey+'-standard')]
 }
-

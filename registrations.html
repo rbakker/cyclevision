@@ -4,10 +4,87 @@
 <script type="text/javascript" src="jquery.min.js"></script>
 <script type="text/javascript" src="papaparse.min.js"></script>
 <script type="text/javascript" src="forms.js"></script>
+<script type="text/javascript" src="FileSaver.min.js"></script>
 <script type="text/javascript">
 "use strict"
 
-function listParticipants(csv) {
+var DATA_BY_LFID
+
+function csvWrite(columns,csvFile,keyName) {
+  var fields = Object.keys(columns)
+  var firstColumn = columns[fields[0]]
+  var table = []
+  if (Array.isArray(firstColumn)) {
+    for (var i=0; i<firstColumn.length; i++) {
+      var row = []
+      for (var k in columns) {
+        var value = columns[k][i]
+        if (typeof value == 'object') {
+          value = JSON.stringify(value).replace(/"/g,'')
+          value = String(value).substr(1,value.length-2)
+        }
+        row.push(value)
+      }
+      table.push(row)    
+    }
+  } else {
+    if (keyName) fields.unshift(keyName)
+    for (var i in firstColumn) {
+      var row = keyName ? [i] : []
+      for (var k in columns) {
+        var value = columns[k][i]
+        if (typeof value == 'object') {
+          value = JSON.stringify(value).replace(/"/g,'')
+          value = String(value).substr(1,value.length-2)
+        }
+        row.push(value)
+      }
+      table.push(row)    
+    }
+  }
+  var csv = Papa.unparse({
+	  fields: fields,
+	  data: table
+	})
+  if (csvFile) {
+    var blob = new Blob([csv], {type:'text/csv'})
+    saveAs(blob,csvFile)
+  }
+  return csv
+}
+  
+function fairingCode(bike) {
+  var tc = ''
+  if (bike.fairing == 'full') return 'FF'
+  if (bike.fairing == 'front' || bike.fairing == 'rear' || bike.fairing == 'tail') return 'PF'
+  if (bike.fairing == 'none') return 'UF'
+  return '??'
+}
+
+function raceCode(race,values,bike) {
+  if (race == 'onehour') return 'A'
+  if (race == 'indoor1lap') return 'B'
+  if (race == 'criterium' && values.which == 'semifaired') return 'C'
+  if (race == 'criterium' && values.which == 'open') return 'D'
+  if (race == 'criterium' && bike.fairing !== 'full') return 'C'
+  if (race == 'criterium' && bike.fairing == 'full') return 'D'
+  if (race == 'outdoor1lap') return 'E'
+  if (race == 'threehour' && values.duration == 3) return 'F'
+  if (race == 'threehour' && values.duration == 6) return 'G'
+  return '?'
+}
+
+function assertObject(obj,member) {
+  if (!obj[member]) obj[member] = {}
+  return obj[member]
+}
+
+function assertArray(obj,member) {
+  if (!obj[member]) obj[member] = []
+  return obj[member]
+}
+
+function parseData(csv,mutations) {
   var ans = Papa.parse(csv,{delimiter: ",",fastMode: false})
   var list = ans.data
   for (var i=0; i<list.length; i++) {
@@ -17,81 +94,569 @@ function listParticipants(csv) {
   var header = list[i]
   var i0 = i+1
   var numCols = header.length
-  var html = []
-  html.push('<h2>Kamperen en Maaltijden</h2>')
-  html.push('<table>')
-  html.push('<tr>')
   var commentCol = 0
   for (var j=0; j<header.length; j++) {
     if (header[j].toLowerCase() == 'opmerking') {
       commentCol = j
       break
     }
-    html.push('<th>'+header[j]+'</th>')
   }
-  html.push('</tr>')
+
+  var allData = {}
   for (i=i0; i<list.length; i++) {
     var row = list[i]
-    html.push('<tr>')
-    for (var j=0; j<commentCol; j++) html.push('<td>'+(row[j] || '')+'</td>')
-    html.push('</tr>')
+    if (row[1] === undefined) continue
+    var lfid = String(row[1])
+    try {
+      var data = JSON.parse(row[commentCol])
+      row[commentCol] = 'json'
+    } catch(e) {
+      var data = {
+        '__error__': 'row '+i+' has no json-data. The row values are:<br/>'+JSON.stringify(row)
+      }
+    }
+    data['__row__'] = row
+    allData[lfid] = data
   }
-  html.push('</table>')
   
-  html.push('<h2>Wedstrijdlijst</h2>')
+  // apply mutations
+  var update = function(obj,mut) {
+    for (var k in mut) {
+      if (obj[k] && typeof obj[k] == 'object') update(obj[k],mut[k])
+      else obj[k] = mut[k]
+    }
+  }
+  if (mutations) {
+    for (var lfid in mutations) {
+      var data = allData[lfid]
+      var mut = mutations[lfid]
+      if (data) {
+        update(data,mut)
+      } else {
+        allData[lfid] = mut
+      }
+    }
+  }
+  return allData  
+}
+
+function displayJson(output,errors) {
+  $("#errors").html('<pre>'+JSON.stringify(errors,null,2).replace(/</g,'&lt;').replace(/&/g, "&amp;")+'</pre>')
+  $("#output").html('<pre>'+JSON.stringify(output,null,2).replace(/</g,'&lt;').replace(/&/g, "&amp;")+'</pre>')
+}
+
+function rawData() {
+  displayJson(DATA_BY_LFID,[])
+}
+
+function raceNumbers(csvFile) {
+  var races = {}
+  for (var formKey in FORMS) {
+    var form = FORMS[formKey]
+    if (form.day) races[formKey] = []
+  }  
+  var riders = {}
+  var raceNumber = 1
+  for (var lfid in DATA_BY_LFID) {    
+    var DATA = DATA_BY_LFID[lfid]
+    for (var race in races) {
+      if (DATA[race]) {
+        for (var k in DATA[race]) {
+          if (DATA[race][k] !== null) {
+            var d = DATA[race][k].rider
+            var rider = DATA.rider[d]
+            var riderName = rider.firstName+' '+rider.lastName //+' ('+rider.ligfietsnet+')'
+            if (!riders[riderName]) {
+              riders[riderName] = raceNumber
+              raceNumber++
+            }
+            //assertArray(rider,'_races').push(race)
+          }
+        }
+      }
+    }
+  }
+  displayJson(riders,[])
+  csvWrite({'wedstrijdnummer':riders},csvFile,'name')
+}
+
+function mealCount(csvFile) {
+  var meal2field = {
+    'mealFri':10,
+    'mealFriVeg':18,
+    'mealPlan':11,
+    'mealPlanVeg':19,
+    'breakfastSat':12,
+    'breakfastSatVeg':20,
+    'mealSat':13,
+    'mealSatVeg':21,
+    'breakfastSun':14,
+    'breakfastSunVeg':22
+  }
+  var errors = []
+  var mealCount = {
+    total: {},
+    people: {}
+  }
+  for (var k in meal2field) {
+    mealCount.total[k] = 0
+    mealCount.people[k] = []
+  }
+  for (var lfid in DATA_BY_LFID) {
+    var DATA = DATA_BY_LFID[lfid]
+    var row = DATA.__row__
+    
+    var meals = DATA.meal || {}
+    for (k in meal2field) { 
+      if (meals[k] == undefined) {
+        meals[k] = row && Number(row[meal2field[k]])  
+      } else if (row && Number(row[meal2field[k]]) != meals[k]) {
+        errors.push('Meals specified in comment-data does not match submitted value for user '+row[1]+' ('+row[3]+')')
+      }
+    }
+    var fullName = (row && row[3]) || (DATA._userInfo && DATA._userInfo.profile.fullname)
+    for (k in meals) {
+      var nm = meals[k]
+      if (nm) {
+        mealCount.total[k] += Number(nm)
+        mealCount.people[k].push(fullName+'('+nm+')')
+      }
+    }
+  }
+  displayJson(mealCount,errors)
+  csvWrite(mealCount,csvFile,'meal')
+}
+
+function getPrice(priceData, DATA,formKey,keys) {
+  var values = DATA[formKey]
+  var form = FORMS[formKey]
+  if (!form || !values) return 0
+  var fields = form.fields
+  if (!keys) { keys = []; for (var k in values) keys.push(k) }
+  var price = 0
+  for (var i=0; i<keys.length; i++) {
+    var k = keys[i]
+    var v = Number(values[k] || 0)
+    var p = (fields[k].price || 0)
+    priceData[k] = [v,p]
+    price += v*p
+  }
+  return price
+}
+
+function summarize(DATA) {
+  var errors = []
+  var priceData = []
+  var total = 0
+
+  var price = getPrice(priceData, DATA,'camping',['adultFri','childFri','adultSat','childSat'])
+  total += price
+  
+  price = getPrice(priceData, DATA,'meal',['mealPlan','mealPlanVeg'])
+  total += price
+
+  price = getPrice(priceData, DATA,'meal',['mealFri','mealFriVeg','breakfastSat','breakfastSatVeg','mealSat','mealSatVeg','breakfastSun','breakfastSunVeg',])
+  total += price
+  
+  // RACES
+  /* compute days that riders are racing */
+  var races = [[],[],[]]
+  for (var formKey in FORMS) {
+    var fields = FORMS[formKey]
+    if (fields.day) races[fields.day].push(formKey)
+  }
+
+  var riderRaces = {}
+  for (var d=1; d<=2; d++) {
+    var rd = races[d]
+    for (var i=0; i<rd.length; i++) {
+      var formKey = rd[i]
+      var ribi = DATA[formKey] // rider+bike
+      for (var k in ribi) {
+        if (ribi[k]) {
+          var r = ribi[k].rider
+          var b = ribi[k].bike
+          if (!DATA.rider[r]) errors.push('<span class="EN">Race '+FORMS[formKey].name.EN+' contains an undefined rider</span><span class="NL">Race '+FORMS[formKey].name.NL+' bevat een ongeldige rijder</span>.')
+          if (!DATA.bike[b]) errors.push('<span class="EN">Race '+FORMS[formKey].name.EN+' contains an undefined bike</span><span class="NL">Race '+FORMS[formKey].name.NL+' bevat een ongeldige fiets</span>.')
+          if (!riderRaces[r]) riderRaces[r] = [[],[],[]]
+          var raceName = multiLang(FORMS[formKey].name)
+          if (riderRaces[r][d].indexOf(raceName) < 0) {
+            riderRaces[r][d].push(raceName)
+          } else {
+            var riderName = FORMS.rider.stringify(DATA.rider[r])
+            errors.push('<span class="EN">Rider '+riderName+' is registering more than once for the race "'+raceName+'".</span><span class="NL">Rijder '+riderName+' schrijft zich dubbel in voor de race "'+raceName+'".</span>')
+          }
+        }
+      }
+    }
+  }
+  var numSatOnly = 0
+  var numSunOnly = 0
+  var numTwoDays = 0  
+  for (var r in riderRaces) {
+    var sat = riderRaces[r][1]
+    var sun = riderRaces[r][2]
+    var numSat = sat.length
+    var numSun = sun.length
+    sat = numSat ? '"'+riderRaces[r][1].join('","')+'"' : ''
+    sun = numSun ? '"'+riderRaces[r][2].join('","')+'"' : ''
+    price = 0
+    if (numSat && numSun) { numTwoDays++; price = HIDDEN.race.twoDays.price }
+    else if (numSat) { numSatOnly++; price = HIDDEN.race.oneDay.price }
+    else if (numSun) { numSunOnly++; price = HIDDEN.race.oneDay.price }
+    total += price
+  }
+  priceData.racesSat = [numSatOnly,HIDDEN.race.oneDay.price]
+  priceData.racesSun = [numSunOnly,HIDDEN.race.oneDay.price]
+  priceData.racesAll = [numTwoDays,HIDDEN.race.twoDays.price]
+  return [priceData,errors]  
+}
+
+function orderList(csvFile) {
+  var item2col = {
+    'adultFri':       [6,'camping Vr. €4','camping'],
+    'childFri':      [7,'camping Vr. kind €2','camping'],
+    'adultSat':       [8,'camping Zat. €4','camping'],
+    'childSat':      [9,'camping Zat. kind €2','camping'],
+    'mealFri':         [10,'chinees Vr. €10','meal'],
+    'mealFriVeg':      [18,'chinees Vr. veg. €10','meal.mealFriVeg'],
+    'mealPlan':        [11,'maaltijd arrang. €30','meal.mealPlan'],
+    'mealPlanVeg':     [19,'maaltijd arrang. veg. €30','meal.mealPlanVeg'],
+    'breakfastSat':    [12,'ontbijt Zat. €7,50','meal.breakfastSat'],
+    'breakfastSatVeg': [20,'ontbijt Zat. veg. €7,50','meal.breakfastSatVeg'],
+    'mealSat':         [13,'maaltijd Zat. €20','meal.mealSat'],
+    'mealSatVeg':      [21,'maaltijd Zat. veg. €20','meal.mealSatVeg'],
+    'breakfastSun':    [14,'ontbijt Zon.  €7,50','meal.breakfastSun'],
+    'breakfastSunVeg': [22,'ontbijt Zon. veg. €7,50','meal.breakfastSunVeg'],
+    'racesSat':        [16,'races Zat. €15'],
+    'racesSun':        [17,'races Zon. €15'],
+    'racesAll':        [15,'races Weekend €25']
+  }
+  var idealCol = 0
+  var errors = []
+  var orderList = {
+    naam: [],
+    'prijs': [],
+    'korting':[],
+    'ideal betaling': [],
+    'nabestelling': [],
+    'overboeking': [],
+    'nog te betalen':[],
+    'contant': []
+  }
+  for (var k in item2col) {
+    var itemName = item2col[k][1]
+    orderList[itemName] = []
+  }
+  for (var lfid in DATA_BY_LFID) {
+    var DATA = DATA_BY_LFID[lfid]
+    var row = DATA.__row__
+    var ideal = row && row[23]
+    if (ideal) {
+      var price = (DATA._price || row[5])
+      if (row[5] && DATA._price && row[5] != DATA._price) {
+        errors.push('User '+row[3]+' has a price mismatch: kosten '+row[5]+', price '+DATA._price+'.')
+      }
+      if (!price) errors.push('User '+lfid+' paid by ideal ('+ideal+') but DATA ('+JSON.stringify(DATA)+') contains no _price.')
+      if (price) ideal = price
+    } else {
+      ideal = ""
+    }
+    orderList['ideal betaling'].push(ideal)
+    var fullName = (row && row[3]) || (DATA._userInfo && DATA._userInfo.profile.fullname)
+    if (!fullName) {
+      console.log(DATA._userInfo)
+      errors.push('No name for lfid '+lfid)
+    }
+    orderList.naam.push(fullName)
+    var price = (row && row[5]) || ''
+    orderList['prijs'].push(price)
+    var correctedPrice = ''
+    var priceData = ''
+    if (!DATA.__error__) {
+      var summary = summarize(DATA)
+      priceData = summary[0]
+      var total = 0
+      for (var k in priceData) {
+        total += priceData[k][0]*priceData[k][1]
+      }
+      correctedPrice = total
+      var dataErrors = summary[1]
+      for (var i=0; i<dataErrors.length; i++) errors.push(dataErrors[i])
+    }
+    orderList.nabestelling.push(correctedPrice ? correctedPrice-price : '')
+    for (var k in item2col) {
+      var itemName = item2col[k][1]
+      var value = ''
+      if (DATA.__error__) {
+        var col = item2col[k][0]
+        value = row[col]
+      } else {
+        var value = (priceData[k] && priceData[k][0]) || ''
+        if (row) {
+          var col = item2col[k][0]
+          if (row[col] != value) errors.push('Value of '+k+' ('+value+' vs. '+row[col]+') mismatch for user '+row[3])
+        }
+      }
+      orderList[itemName].push(value)
+    }
+  }
+  
+  displayJson(orderList,errors)
+  csvWrite(orderList,csvFile)
+}
+
+function listForGerard(csvFile) {
+  var races = {}
+  for (var formKey in FORMS) {
+    var form = FORMS[formKey]
+    if (form.day) races[formKey] = []
+  }  
+  var riders = {
+    'nummer':{},
+    'races':{},
+    'bikes':{},
+    'gender':{},
+    'lfid':{}
+  }
+  var raceNumber = 1
+  for (var lfid in DATA_BY_LFID) {    
+    var DATA = DATA_BY_LFID[lfid]
+    for (var race in races) {
+      if (DATA[race]) {
+        for (var k in DATA[race]) {
+          if (DATA[race][k] !== null) {
+            var values = DATA[race][k]
+            var d = values.rider
+            var rider = DATA.rider[d]
+            var riderName = rider.firstName+' '+rider.lastName //+' ('+rider.ligfietsnet+')'
+            var b = values.bike
+            var bike = DATA.bike[b]
+            if (!riders.nummer[riderName]) {
+              riders.nummer[riderName] = raceNumber
+              riders.races[riderName] = raceCode(race,values,bike)
+              assertArray(riders.bikes,riderName).push( fairingCode(bike) )
+              riders.gender[riderName] = (rider.gender === 'male' ? 'M' : rider.gender == 'female' ? 'F' : '?')
+              riders.lfid[riderName] = (rider.ligfietsnet)
+              raceNumber++
+            } else {
+              riders.races[riderName] += raceCode(race,values,bike)
+              var fc = riders.bikes[riderName].indexOf(fairingCode(bike))
+              if (fc==-1) {
+                riders.bikes[riderName].push(fairingCode(bike))
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  displayJson(riders,[])
+  csvWrite(riders,csvFile,'name')
+}
+
+function masterTable(csvFile,forWeb) {
+  var errors = []
+  var raceNames = {
+    'A':'1-hour',
+    'B':'200m fly',
+    'C':'crit PF',
+    'D':'crit FF',
+    'E':'2.5 km',
+    'F':'3-hour',
+    'G':'6-hour'
+  }
+  var races = {}
+  for (var formKey in FORMS) {
+    var form = FORMS[formKey]
+    if (form.day) races[formKey] = []
+  }  
+  var rider2number = {}
+  var riderBikes = {}
+  var riders = {
+    'first name':{},
+    'last name':{},
+    'number':{},
+    'transponder':{},
+    'lfid':{},
+    'gender':{},
+    'age':{},
+    'jr/sr':{},
+    'present':{}
+  }
+  for (var r in raceNames) {
+    riders[raceNames[r]] = {}
+  }
+  riders['code'] = {}
+  riders['bike'] = {}
+  riders['about bike'] = {}
+  riders['about me'] = {}
+  riders['BeND'] = {}
+  riders['speed_1-hour'] = {}
+  riders['speed_200m fly'] = {}
+  riders['speed_2.5 km'] = {}
+  riders['birth date'] = {}
+  riders['email'] = {}
+  var raceNumber = 1
+  for (var lfid in DATA_BY_LFID) {    
+    var DATA = DATA_BY_LFID[lfid]
+    for (var race in races) {
+      if (DATA[race]) {
+        for (var k in DATA[race]) {
+          if (DATA[race][k] !== null) {
+            var values = DATA[race][k]
+            var d = values.rider
+            var rider = DATA.rider[d]
+            var riderName = rider.firstName+' '+rider.lastName
+            var b = values.bike
+            var bike = DATA.bike[b]
+            var fc = fairingCode(bike)
+            var bikeName = bike.name+' '+bike.make
+            var bikeCode = ''
+            if (bike.track == 'multi') bikeCode += 'M'
+            if (bike.tandem == 'yes') {
+              if (bike.make.indexOf('RAR')>-1) bikeCode += 'T'
+              else console.log('Not a tandem',bike) // due to a bug, many bikes are registered as tandems
+            }
+            if (bike.drive == 'rowing') bikeCode += 'R'
+            if (bike.drive == 'hand') bikeCode += 'H'
+            var nr = rider2number[riderName]
+            if (!nr) {
+              nr = rider2number[riderName] = raceNumber            
+              raceNumber++
+            }
+            var rider_bike = riderName+'|'+bikeName
+            if (!riders[rider_bike]) {
+              assertArray(riderBikes,riderName)
+              var bikePos = riderBikes[riderName].indexOf(bikeName)
+              if (bikePos<0) {
+                riderBikes[riderName].push(bikeName)
+                bikePos = riderBikes[riderName].indexOf(bikeName)
+              }
+              riders['first name'][rider_bike] = rider.firstName
+              riders['last name'][rider_bike] = rider.lastName
+              riders.transponder[rider_bike] = '#'+nr
+              for (var i=0; i<bikePos; i++) nr += '*' 
+              riders.number[rider_bike] = '{'+nr+'}'
+              riders['gender'][rider_bike] = (rider.gender === 'male' ? 'M' : rider.gender == 'female' ? 'F' : '?')
+              riders.lfid[rider_bike] = (rider.ligfietsnet)
+              var ymd = rider.birthDate.split('-')
+              if (ymd.length != 3) errors.push('Invalid birthDate '+rider.birthDate+' for rider '+riderName)
+              var riderAge = Math.floor(2017+6/100+24/10000 - (Number(ymd[0])+Number(ymd[1])/100+Number(ymd[2]/10000)))
+              riders['age'][rider_bike] = (forWeb ? '***' : riderAge)
+              riders['present'][rider_bike] = (DATA._cancel ? 'cancel' : '')
+              if (riderAge <= 16) riders['jr/sr'][rider_bike] = 'jr'
+              if (riderAge >= 55) riders['jr/sr'][rider_bike] = 'sr'
+              riders['code'][rider_bike] = fc+(bikeCode ? '-'+bikeCode : '')
+              riders['bike'][rider_bike] = bikeName
+              riders['about bike'][rider_bike] = bike.about
+              riders['about me'][rider_bike] = rider.about
+              riders['BeND'][rider_bike] = rider.bend
+              riders['birth date'][rider_bike] = (forWeb ? '***' : rider.birthDate)
+              riders['email'][rider_bike] = (forWeb ? '***' : rider.email)
+            }
+            var rc = raceCode(race,values,bike)
+            var raceName = raceNames[rc]
+            if (values.speed) riders['speed_'+raceName][rider_bike] = values.speed
+            riders[raceName][rider_bike] = 'x' //fc+(bikeCode ? '-'+bikeCode : '')
+          }
+        }
+      }
+    }
+  }
+  displayJson(riders,errors)
+  csvWrite(riders,csvFile)
+}
+
+function allParticipants() {
+  var errors = []
+  var byRider = {}
   var races = {}
   for (var formKey in FORMS) {
     var form = FORMS[formKey]
     if (form.day) races[formKey] = []
   }
-  for (i=i0; i<list.length; i++) {
-    var row = list[i]
-    var data = row[commentCol]
-    if (!data) continue
-    DATA = JSON.parse(data)
+  for (var lfid in DATA_BY_LFID) {
+    DATA = DATA_BY_LFID[lfid]
+    var anyRace = false
     for (var r in races) {
       var values = DATA[r]
       if (values) {
+        anyRace = true
         for (var k in values) {
-          if (values[k]) races[r].push({
-            rider: DATA.rider[values[k].rider],
-            bike: DATA.bike[values[k].bike]
-          })
+          var value = values[k]
+          if (value) {
+            var rider = DATA.rider[values[k].rider]
+            var bike = DATA.bike[values[k].bike]
+            var riderName = rider.firstName+' '+rider.lastName
+            var riderData = assertObject(byRider,riderName)
+            assertArray(riderData,'races').push(r)
+            assertArray(riderData,'raceCode').push(raceCode(r,value,bike))
+            var ymd = rider.birthDate.split('-')
+            if (ymd.length != 3) errors.push('Invalid birthDate '+rider.birthDate+' for rider '+riderName)
+            var riderAge = Math.floor(2017+6/100+24/10000 - (Number(ymd[0])+Number(ymd[1])/100+Number(ymd[2]/10000)))
+            riderData.birthDate = rider.birthDate
+            riderData.age = riderAge
+            riderData.riderCode = ( riderAge >= 55 ? 'sr' : (riderAge<17 ? 'jr' : '') )+( rider.gender=='male' ? 'M' : (rider.gender=='female' ? 'F' : '?') )
+          }
         }
       }
     }
-    html.push('<pre>'+JSON.stringify(DATA,null,2)+'</pre>')
-  }
-  for (var r in races) {
-    var values = races[r]
-    html.push('<h3>'+r+'</h3>')
-    html.push('<table>')
-    var cols = {
-      riderFirstName: FORMS.bike
+    var row = DATA['__row__']
+    if (row) {
+      var isRacing = row[15] || row[16] || row[17]
+      if (isRacing && !anyRace) errors.push('User '+lfid+' ('+row[3]+') is racing but not participating in any race.')
     }
-    for (var k in values) html.push('<tr><td>'+JSON.stringify(values[k])+'</td></tr>')
-    html.push('</table>')
   }
-  $("#participants").html(html.join(''))
+  displayJson(byRider,errors)
+}
+
+function showButtons() {
+  var races = {}
+  for (var formKey in FORMS) {
+    var form = FORMS[formKey]
+    if (form.day) races[formKey] = []
+  }
+  var html = []
+  html.push([
+    '<input type="button" value="Ruwe data" onclick="rawData()">&nbsp;',
+    '<input type="button" value="Wedstrijdnummers" onclick="raceNumbers(\'wedstrijdnummers.csv\')">&nbsp;',
+    '<input type="button" value="Wedstrijdrijders" onclick="listForGerard(\'wedstrijdrijders.csv\')">&nbsp;',
+    '<input type="button" value="Maaltijden" onclick="mealCount(\'maaltijden.csv\')">&nbsp;',
+    '<input type="button" value="Bestellijst" onclick="orderList(\'bestellijst.csv\')">&nbsp;',
+    '<input type="button" value="Inschrijflijst" onclick="masterTable(\'inschrijflijst.csv\')">',
+    '<input type="button" value="Inschrijflijst (web)" onclick="masterTable(\'inschrijflijst.csv\',true)">'
+  ].join('&nbsp;'))
+  $("#buttons").html(html.join(''))
 }
 
 function onload() {
   $.ajax({
-//    url: 'https://www.ligfiets.net/event/downloadregistrations/3771/cyclevision-test.html',
     url: 'Cycle-Vision-Inschrijvingen-2017.csv',
     method: 'GET',
     xhrFields: {
       withCredentials: true
     }
   }).done(function(data) {
-    console.log('ok')
-    listParticipants(data)
+    console.log('data ok')
+    $.ajax({
+      url: 'mutations.json',
+      method: 'GET'
+    }).done(function(mutations) {
+      console.log('mutations ok')
+      DATA_BY_LFID = parseData(data,mutations)
+      showButtons()
+    }).fail(function(msg) {
+      console.log('Failure to load mutations.')
+    })
   }).fail(function(msg) {
-    console.log('Failure to query ligfiets.net')
+    console.log('Failure to load data.')
   })
 }
 
 </script>
 </head><body onload="onload()">
-<div id="participants"></div>
+<div id="buttons"></div>
+<div id="errors" style="color: #D00"></div>
+<div id="output"></div>
 </body></html>
